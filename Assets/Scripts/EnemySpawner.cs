@@ -24,15 +24,17 @@ public class Spawner : MonoBehaviour
     private float spawnTimer;
 
     private void Update()
-    {   
+    {
         if (tower == null || tower.Sections.Count == 0)
-        return;
-        
+            return;
+
         spawnTimer += Time.deltaTime;
 
-        if (spawnTimer >= spawnInterval)
+        float currentInterval = GetSpawnInterval();
+
+        if (spawnTimer >= currentInterval)
         {
-            spawnTimer -= spawnInterval;
+            spawnTimer -= currentInterval;
             SpawnEnemy();
         }
     }
@@ -196,5 +198,17 @@ public class Spawner : MonoBehaviour
         }
 
         return closest;
+    }
+
+    private float GetSpawnInterval()
+    {
+        int sectionCount = tower != null
+            ? tower.Sections.Count
+            : 0;
+
+        return Mathf.Max(
+            0.1f,
+            spawnInterval - sectionCount * 0.075f
+        );
     }
 }

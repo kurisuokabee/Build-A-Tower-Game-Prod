@@ -7,11 +7,12 @@ public class FlameProjectileDetection : MonoBehaviour
     [SerializeField] private ParticleSystem[] particleSystems = new ParticleSystem[2];
 
     [Header("Damage Settings")]
-    [SerializeField] private float damagePerHit = 5f;
     [SerializeField] private float damageCooldown = 1f;
     [SerializeField] private float hitRadius = 0.5f;
 
     private ParticleSystem.Particle[][] particleBuffers;
+
+    TowerFlame towerFlame;
 
     // Tracks when each enemy can take damage again.
     private readonly Dictionary<EnemyHealth, float> damageTimers = new();
@@ -29,6 +30,8 @@ public class FlameProjectileDetection : MonoBehaviour
                 particleSystems[i].main.maxParticles
             ];
         }
+
+        towerFlame = GetComponent<TowerFlame>();
     }
 
     private void Update()
@@ -77,7 +80,7 @@ public class FlameProjectileDetection : MonoBehaviour
                     if (!damageTimers.TryGetValue(health, out float nextDamageTime)
                         || Time.time >= nextDamageTime)
                     {
-                        health.TakeDamage(damagePerHit);
+                        health.TakeDamage(towerFlame.Damage);
                         damageTimers[health] = Time.time + damageCooldown;
                     }
                 }

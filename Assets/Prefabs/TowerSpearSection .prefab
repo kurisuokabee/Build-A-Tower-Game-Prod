@@ -250,8 +250,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3625021212594386761}
   - component: {fileID: 1331889849164720198}
-  - component: {fileID: 1758116370365559787}
   - component: {fileID: 1943861942243901281}
+  - component: {fileID: 7396202224520586370}
   m_Layer: 0
   m_Name: 'TowerSpearSection '
   m_TagString: Untagged
@@ -331,18 +331,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &1758116370365559787
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5696568791513838392}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62f64c1f8f4da41ffb2c369716b6e4aa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1943861942243901281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -358,15 +346,28 @@ MonoBehaviour:
   height: 1
   width: 1
   sectionData: {fileID: 11400000, guid: cd4a6017b6d1d894eb068567cf282e2d, type: 2}
-  enemyFinder: {fileID: 1758116370365559787}
+  enemyFinder: {fileID: 7396202224520586370}
   leftSpear: {fileID: 7601668217970952002}
   rightSpear: {fileID: 5860932048790672114}
   leftHandleSprite: {fileID: 538633876672907031}
   rightHandleSprite: {fileID: 4167498460833519094}
   leftHead: {fileID: 5672862414119484022}
   rightHead: {fileID: 7617572056157287259}
+  spearReach: 2
   thrustDuration: 0.2
   retractDuration: 0.2
+--- !u!114 &7396202224520586370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5696568791513838392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b2ec09a41bec449b64e75b05d0a07d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7465849092739263977
 GameObject:
   m_ObjectHideFlags: 0

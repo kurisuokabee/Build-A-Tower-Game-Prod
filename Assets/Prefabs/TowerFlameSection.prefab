@@ -9676,9 +9676,9 @@ GameObject:
   m_Component:
   - component: {fileID: 3625021212594386761}
   - component: {fileID: 1331889849164720198}
-  - component: {fileID: 7818453022149454379}
-  - component: {fileID: 1733120856598768654}
-  - component: {fileID: 1758116370365559787}
+  - component: {fileID: 76237885973357492}
+  - component: {fileID: 2304904919478606005}
+  - component: {fileID: 82259870041714361}
   m_Layer: 0
   m_Name: TowerFlameSection
   m_TagString: Untagged
@@ -9758,7 +9758,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7818453022149454379
+--- !u!114 &76237885973357492
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9767,19 +9767,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 5696568791513838392}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 145692e9006684ffa8b1686859d908f3, type: 3}
+  m_Script: {fileID: 11500000, guid: 6f71975f61b49e744a7b3bd88150e3b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   height: 1
   width: 1
   sectionData: {fileID: 11400000, guid: 235e1e7eda9239f4aa7101ce61cb06be, type: 2}
-  enemyFinder: {fileID: 1758116370365559787}
+  enemyFinder: {fileID: 82259870041714361}
   particleSystemRef:
   - {fileID: 2696199499345575324}
   - {fileID: 3879120472067366142}
-  playDuration: 3
+  playDuration: 2
   cooldownTime: 3
---- !u!114 &1733120856598768654
+--- !u!114 &2304904919478606005
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9788,16 +9788,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 5696568791513838392}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c71874be345f2446480a5b6033f738b0, type: 3}
+  m_Script: {fileID: 11500000, guid: a22ca44a83a047841877669f63825b12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   particleSystems:
   - {fileID: 2696199499345575324}
   - {fileID: 3879120472067366142}
-  damagePerHit: 10
-  damageCooldown: 0.5
+  damageCooldown: 1
   hitRadius: 0.5
---- !u!114 &1758116370365559787
+--- !u!114 &82259870041714361
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9806,6 +9805,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 5696568791513838392}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62f64c1f8f4da41ffb2c369716b6e4aa, type: 3}
+  m_Script: {fileID: 11500000, guid: 82b2ec09a41bec449b64e75b05d0a07d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

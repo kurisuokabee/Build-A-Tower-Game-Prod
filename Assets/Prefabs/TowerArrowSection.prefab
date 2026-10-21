@@ -41,8 +41,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3625021212594386761}
   - component: {fileID: 1331889849164720198}
-  - component: {fileID: 8904917136720372302}
-  - component: {fileID: 1223505806586796160}
+  - component: {fileID: -647035547220281149}
+  - component: {fileID: 7572231841422173812}
   m_Layer: 0
   m_Name: TowerArrowSection
   m_TagString: Untagged
@@ -121,7 +121,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &8904917136720372302
+--- !u!114 &-647035547220281149
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,17 +130,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 5696568791513838392}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 375f73d21e9f0408daf31394e98e3f4e, type: 3}
+  m_Script: {fileID: 11500000, guid: 7044476914057a4459755fd7b2af7aed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   height: 1
   width: 1
   sectionData: {fileID: 11400000, guid: 82604555845f16546a1b850d6ee4772e, type: 2}
-  enemyFinder: {fileID: 1223505806586796160}
-  sectionId: arrow
+  enemyFinder: {fileID: 7572231841422173812}
   firePoint: {fileID: 6495855460568575031}
-  arrowPrefab: {fileID: 4909509232041502048, guid: f67a4816c03264acea139f88ca0032b4, type: 3}
---- !u!114 &1223505806586796160
+  arrowPrefab: {fileID: 4657670528479179626, guid: efbe09dda312b0440bed435d7f99dd84, type: 3}
+--- !u!114 &7572231841422173812
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -149,6 +148,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 5696568791513838392}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62f64c1f8f4da41ffb2c369716b6e4aa, type: 3}
+  m_Script: {fileID: 11500000, guid: 82b2ec09a41bec449b64e75b05d0a07d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

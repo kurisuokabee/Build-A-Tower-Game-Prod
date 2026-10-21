@@ -1706,7 +1706,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fb466c8926957d44811ed3e9f57f49a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerSectionUI
-  sectionPrefab: {fileID: 8904917136720372302, guid: f6efe116a2cff3e4aa4ba5f1040a8bbd, type: 3}
+  sectionPrefab: {fileID: -647035547220281149, guid: 11e1f0b25d2e23c489752c852bd0c194, type: 3}
   ghostPrefab: {fileID: 1915853774566234915, guid: e18c485fe5adb8d4b8328642b82ee3c3, type: 3}
   tower: {fileID: 1756381108}
   sectionButton: {fileID: 459930241}
@@ -2492,7 +2492,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fb466c8926957d44811ed3e9f57f49a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerSectionUI
-  sectionPrefab: {fileID: 6494751838241868481, guid: c4eab85121d9f495fb97aa671113346e, type: 3}
+  sectionPrefab: {fileID: 8307491947319934874, guid: 6b841d6cfe2e87f448066aba0a16e7bb, type: 3}
   ghostPrefab: {fileID: 1915853774566234915, guid: e18c485fe5adb8d4b8328642b82ee3c3, type: 3}
   tower: {fileID: 1756381108}
   sectionButton: {fileID: 656603668}
@@ -5449,7 +5449,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fb466c8926957d44811ed3e9f57f49a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerSectionUI
-  sectionPrefab: {fileID: 7818453022149454379, guid: 41746797a01ca4d828beeb99196b8a2b, type: 3}
+  sectionPrefab: {fileID: 76237885973357492, guid: e939d2fad47f63640b8e06b55e8f639f, type: 3}
   ghostPrefab: {fileID: 1915853774566234915, guid: e18c485fe5adb8d4b8328642b82ee3c3, type: 3}
   tower: {fileID: 1756381108}
   sectionButton: {fileID: 1333568919}
