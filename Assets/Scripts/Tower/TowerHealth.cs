@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class TowerHealth : MonoBehaviour
 {
@@ -51,6 +52,11 @@ public class TowerHealth : MonoBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth = Mathf.Max(0f, currentHealth - damage);
+
+        if(currentHealth <= 0)
+        {
+            SceneManager.LoadScene("TowerBuilding");
+        }
         UpdateUI();
     }
 

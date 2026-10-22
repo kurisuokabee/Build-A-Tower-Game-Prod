@@ -125,7 +125,7 @@ MonoBehaviour:
   attackType: 0
   attackRange: 1
   attackInterval: 3
-  damage: 1
+  damage: 5
   projectilePrefab: {fileID: 9121807198593708600, guid: 2ff9cd9961a2cd4469768b2950abfc63, type: 3}
   projectileSpeed: 6
 --- !u!114 &-5322605307697249553
