@@ -4,35 +4,21 @@ using UnityEngine;
 
 public class TowerEnemyFinder : MonoBehaviour
 {
-    public Enemy FindNearestEnemy(float searchRange)
-    {
-        Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+    private static readonly Dictionary<Enemy, TowerEnemyFinder> reservations =
+        new Dictionary<Enemy, TowerEnemyFinder>();
 
-        Enemy nearest = null;
-        float nearestDistance = searchRange * searchRange;
-
-        foreach (Enemy enemy in enemies)
-        {
-            if (enemy == null || !enemy.gameObject.activeInHierarchy)
-                continue;
-
-            float distance =
-                (transform.position - enemy.transform.position).sqrMagnitude;
-
-            if (distance <= nearestDistance)
-            {
-                nearestDistance = distance;
-                nearest = enemy;
-            }
-        }
-
-        return nearest;
-    }
+    private List<Enemy> currentTargets = new List<Enemy>();
 
     public List<Enemy> FindNearestEnemies(float searchRange, int count)
     {
-        Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
-        List<Enemy> targets = new List<Enemy>();
+        ReleaseTargets();
+
+        Enemy[] enemies = FindObjectsByType<Enemy>(
+            FindObjectsSortMode.None
+        );
+
+        List<Enemy> availableTargets = new List<Enemy>();
+        List<Enemy> fallbackTargets = new List<Enemy>();
 
         float rangeSquared = searchRange * searchRange;
 
@@ -42,25 +28,84 @@ public class TowerEnemyFinder : MonoBehaviour
                 continue;
 
             float distance =
-                (transform.position - enemy.transform.position).sqrMagnitude;
+                (enemy.transform.position - transform.position).sqrMagnitude;
 
-            if (distance <= rangeSquared)
+            if (distance > rangeSquared)
+                continue;
+
+            fallbackTargets.Add(enemy);
+
+            if (!reservations.ContainsKey(enemy))
+                availableTargets.Add(enemy);
+        }
+
+        availableTargets.Sort(CompareDistance);
+        fallbackTargets.Sort(CompareDistance);
+
+        List<Enemy> targets = new List<Enemy>();
+
+        // Prefer enemies that aren't targeted by another section.
+        foreach (Enemy enemy in availableTargets)
+        {
+            if (targets.Count >= count)
+                break;
+
+            targets.Add(enemy);
+        }
+
+        // If there aren't enough enemies, allow shared targets.
+        foreach (Enemy enemy in fallbackTargets)
+        {
+            if (targets.Count >= count)
+                break;
+
+            if (!targets.Contains(enemy))
                 targets.Add(enemy);
         }
 
-        targets.Sort((a, b) =>
+        foreach (Enemy enemy in targets)
         {
-            float distanceA =
-                (a.transform.position - transform.position).sqrMagnitude;
-            float distanceB =
-                (b.transform.position - transform.position).sqrMagnitude;
-
-            return distanceA.CompareTo(distanceB);
-        });
-
-        if (targets.Count > count)
-            targets.RemoveRange(count, targets.Count - count);
+            reservations[enemy] = this;
+            currentTargets.Add(enemy);
+        }
 
         return targets;
+    }
+
+    public Enemy FindNearestEnemy(float searchRange)
+    {
+        List<Enemy> targets = FindNearestEnemies(searchRange, 1);
+        return targets.Count > 0 ? targets[0] : null;
+    }
+
+    private int CompareDistance(Enemy a, Enemy b)
+    {
+        float distanceA =
+            (a.transform.position - transform.position).sqrMagnitude;
+
+        float distanceB =
+            (b.transform.position - transform.position).sqrMagnitude;
+
+        return distanceA.CompareTo(distanceB);
+    }
+
+    private void ReleaseTargets()
+    {
+        foreach (Enemy enemy in currentTargets)
+        {
+            if (enemy != null &&
+                reservations.TryGetValue(enemy, out TowerEnemyFinder owner) &&
+                owner == this)
+            {
+                reservations.Remove(enemy);
+            }
+        }
+
+        currentTargets.Clear();
+    }
+
+    private void OnDisable()
+    {
+        ReleaseTargets();
     }
 }

@@ -16,4 +16,4 @@ MonoBehaviour:
   sprite: {fileID: 21300000, guid: c9baf5b1540063e4388189bd297497e9, type: 3}
   tier: 1
   movementType: 1
-  attackType: 0
+  attackType: 1

@@ -35,10 +35,7 @@ public class EnemyProjectile : MonoBehaviour
 
         if ((targetPosition - transform.position).sqrMagnitude <= 0.01f)
         {
-            TowerHealth health = target.GetComponentInParent<TowerHealth>();
-
-            if (health != null)
-                health.TakeDamage(damage);
+         
 
             Destroy(gameObject);
         }

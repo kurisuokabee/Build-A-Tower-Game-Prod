@@ -15,10 +15,6 @@ public class TowerSectionUpgrade : MonoBehaviour
         [Header("Build Cost")]
         public int buildCostIncreasePerUpgrade = 10;
 
-        [Header("Block Cost")]
-        public int baseUpgradeCost = 100;
-        public float blockCostMultiplier = 1.5f;
-
         [Header("EXP Cost")]
         public int baseExpCost = 50;
         public float expCostMultiplier = 1.5f;
@@ -55,16 +51,6 @@ public class TowerSectionUpgrade : MonoBehaviour
             : 0;
     }
 
-    public int GetBlockCost(TowerUpgradeID sectionId)
-    {
-        if (!upgradeLookup.TryGetValue(sectionId, out var data))
-            return -1;
-
-        return Mathf.RoundToInt(
-            data.baseUpgradeCost *
-            Mathf.Pow(data.blockCostMultiplier, data.level));
-    }
-
     public int GetExpCost(TowerUpgradeID sectionId)
     {
         if (!upgradeLookup.TryGetValue(sectionId, out var data))
@@ -72,17 +58,19 @@ public class TowerSectionUpgrade : MonoBehaviour
 
         return Mathf.RoundToInt(
             data.baseExpCost *
-            Mathf.Pow(data.expCostMultiplier, data.level));
+            Mathf.Pow(data.expCostMultiplier, data.level)
+        );
     }
 
     public bool CanUpgrade(TowerUpgradeID sectionId)
     {
         if (!upgradeLookup.ContainsKey(sectionId) ||
             PlayerEconomy.Instance == null)
+        {
             return false;
+        }
 
-        return PlayerEconomy.Instance.Blocks >= GetBlockCost(sectionId)
-            && PlayerEconomy.Instance.Exp >= GetExpCost(sectionId);
+        return PlayerEconomy.Instance.Exp >= GetExpCost(sectionId);
     }
 
     public bool Upgrade(TowerUpgradeID sectionId)
@@ -91,20 +79,12 @@ public class TowerSectionUpgrade : MonoBehaviour
             return false;
 
         UpgradeData data = upgradeLookup[sectionId];
-
-        int blockCost = GetBlockCost(sectionId);
-        int expCost = GetExpCost(sectionId);
-
         PlayerEconomy economy = PlayerEconomy.Instance;
 
-        if (!economy.SpendBlocks(blockCost))
-            return false;
+        int expCost = GetExpCost(sectionId);
 
         if (!economy.SpendExp(expCost))
-        {
-            economy.AddBlocks(blockCost);
             return false;
-        }
 
         data.level++;
 
@@ -112,10 +92,11 @@ public class TowerSectionUpgrade : MonoBehaviour
         {
             foreach (TowerSection section in TowerBuilding.Instance.Sections)
             {
-                if (section != null && section.Data != null &&
+                if (section != null &&
+                    section.Data != null &&
                     section.Data.towerUpgradeID == sectionId)
                 {
-                    section.ApplyUpgrade(data.level % 5 == 0);
+                    section.ApplyUpgrade();
                 }
             }
         }

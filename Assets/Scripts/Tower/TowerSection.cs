@@ -16,7 +16,6 @@ public abstract class TowerSection : MonoBehaviour
     public float AttackRange { get; protected set; }
     public float AttacksPerSecond { get; protected set; }
     public float Damage { get; protected set; }
-    public int ProjectileCount { get; protected set; }
 
     public int RequiredLevel => sectionData != null ? sectionData.requiredLevel : 1;
 
@@ -43,10 +42,7 @@ public abstract class TowerSection : MonoBehaviour
         if (sectionData == null)
             return;
 
-        int level = TowerSectionUpgrade.Instance.GetLevel(sectionData.towerUpgradeID);
-
-        for (int i = 1; i <= level; i++)
-            ApplyUpgrade(i % 5 == 0);
+        ApplyUpgrade();
     }
 
 
@@ -61,7 +57,6 @@ public abstract class TowerSection : MonoBehaviour
         AttackRange = sectionData.attackRange;
         AttacksPerSecond = sectionData.attacksPerSecond;
         Damage = sectionData.damage;
-        ProjectileCount = sectionData.projectileCount;
     }
 
     protected virtual void Update()
@@ -114,5 +109,5 @@ public abstract class TowerSection : MonoBehaviour
 
     protected abstract void Attack(List<Enemy> targets);
 
-    public abstract void ApplyUpgrade(bool isSpecialUpgrade);
+    public abstract void ApplyUpgrade();
 }

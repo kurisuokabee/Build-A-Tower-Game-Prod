@@ -1,17 +1,24 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
 public class TowerBuilding : MonoBehaviour
-{   
+{
     public static TowerBuilding Instance { get; private set; }
 
     [Header("Tower Sections")]
     [SerializeField] private TowerSection startingBase;
-    [SerializeField] private TowerHealth towerHealth;
+
+    [Header("Build Cost Scaling")]
+    [SerializeField] private int buildCostIncreasePerSection = 25;
+
+    private Vector3 startingPosition;
 
     private readonly List<TowerSection> sections = new();
+    private int successfulBuilds;
 
     public IReadOnlyList<TowerSection> Sections => sections;
+    public int SuccessfulBuilds => successfulBuilds;
 
     private void Awake()
     {
@@ -22,11 +29,30 @@ public class TowerBuilding : MonoBehaviour
         }
 
         Instance = this;
+
+        startingPosition = transform.position;
     }
 
     private void Start()
     {
         RebuildTower();
+    }
+
+    public int GetCurrentBuildCost(TowerSection section)
+    {
+        if (section == null)
+            return 0;
+
+        return section.BlockCost +
+            buildCostIncreasePerSection * successfulBuilds;
+    }
+
+    public bool BuildTowerSection(TowerSection section)
+    {
+        if (section == null)
+            return false;
+
+        return InsertTowerSection(0, section);
     }
 
     public bool InsertTowerSection(int index, TowerSection section)
@@ -45,56 +71,84 @@ public class TowerBuilding : MonoBehaviour
             return false;
         }
 
-        if (!section.CanAfford)
+        int buildCost = GetCurrentBuildCost(section);
+
+        if (economy.Blocks < buildCost)
         {
-            Debug.Log("Not enough Blocks!");
+            Debug.Log($"Not enough Blocks! Cost: {buildCost}");
             return false;
         }
 
-        // Charge only when a new section is inserted.
-        if (economy.Blocks < section.BlockCost)
-            return false;
-
         index = Mathf.Clamp(index, 0, sections.Count);
 
-        economy.SpendBlocks(section.BlockCost);
+        if (!economy.SpendBlocks(buildCost))
+            return false;
 
         section.transform.SetParent(transform);
         sections.Insert(index, section);
+
+        successfulBuilds++;
 
         RebuildTower();
 
         return true;
     }
+
+    
+    
+    
     private void RebuildTower()
     {
+        if (startingBase == null)
+            return;
+
+        float totalHeight = 0f;
+
+        foreach (TowerSection section in sections)
+        {
+            if (section != null)
+                totalHeight += section.height;
+        }
+
+        // Move the tower upward from its original position.
+        transform.position = startingPosition + new Vector3(
+            0f,
+            totalHeight,
+            0f
+        );
+
+        startingBase.transform.SetParent(transform);
+
+        startingBase.transform.localPosition = new Vector3(
+            0f,
+            startingBase.height / 2f,
+            0f
+        );
+
+        // Place sections directly below the starting tower.
         float currentY = 0f;
 
-        // Position sections from bottom to top.
-        for (int i = sections.Count - 1; i >= 0; i--)
+        for (int i = 0; i < sections.Count; i++)
         {
             TowerSection section = sections[i];
 
             if (section == null)
                 continue;
 
-            section.transform.localPosition =
-                new Vector3(0f, currentY + section.height / 2f, 0f);
+            currentY -= section.height / 2f;
 
-            currentY += section.height;
+            section.transform.localPosition = new Vector3(
+                0f,
+                currentY,
+                0f
+            );
+
+            currentY -= section.height / 2f;
         }
-
-        // Keep the starting base on top.
-        if (startingBase != null)
-        {
-            startingBase.transform.SetParent(transform);
-            startingBase.transform.localPosition =
-                new Vector3(0f, currentY + startingBase.height / 2f, 0f);
-        }
-
-        if (towerHealth != null)
-            towerHealth.UpdateSectionCount(sections.Count);
     }
+
+
+
 
     public int GetInsertionIndex(float mouseY)
     {
@@ -188,7 +242,8 @@ public class TowerBuilding : MonoBehaviour
     {
         foreach (TowerSection section in sections)
         {
-            if (section != null && section.Data != null &&
+            if (section != null &&
+                section.Data != null &&
                 section.Data.towerUpgradeID == upgradeID)
             {
                 return true;

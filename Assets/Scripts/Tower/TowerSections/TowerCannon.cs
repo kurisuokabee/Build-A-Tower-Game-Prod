@@ -8,7 +8,7 @@ public class TowerCannon : TowerSection
     [SerializeField] private Transform firePoint;
     [SerializeField] private CannonProjectile cannonPrefab;
     private float areaOfEffect = 2;
-
+    private int ProjectileCount;
     protected override List<Enemy> FindTargets()
     {
         return FindNearestEnemies(ProjectileCount);
@@ -34,16 +34,9 @@ public class TowerCannon : TowerSection
         }
     }
 
-    public override void ApplyUpgrade(bool isSpecialUpgrade)
+    public override void ApplyUpgrade()
     {
-        if (isSpecialUpgrade)
-        {
-            areaOfEffect += 1;
-        }
-        else
-        {
-            Damage += 1f;
-            AttacksPerSecond =+ 1f;
-        }
+        Damage += 1f;
+        AttacksPerSecond =+ 1f;
     }
 }

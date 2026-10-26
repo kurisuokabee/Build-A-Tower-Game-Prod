@@ -40,10 +40,10 @@ public class PlayerEconomyUI : MonoBehaviour
         if (economy == null) return;
 
         if (blocksText != null)
-            blocksText.text = $"Blocks: {economy.Blocks}";
+            blocksText.text = $"Blocks:{economy.Blocks}";
 
         if (expText != null)
-            expText.text = $"EXP: {economy.Exp}";
+            expText.text = $"EXP:{economy.Exp}";
 
         if (expSlider != null)
         {

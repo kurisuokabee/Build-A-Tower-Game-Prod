@@ -256,16 +256,9 @@ public class TowerSpear : TowerSection
         handle.localScale = originalScale;
     }
 
-    public override void ApplyUpgrade(bool isSpecialUpgrade)
+    public override void ApplyUpgrade()
     {
-        if (isSpecialUpgrade)
-        {
-            spearReach += 1;
-        }
-        else
-        {
-            Damage += 1f;
-            AttacksPerSecond =+ 1f;
-        }
+        Damage += 1f;
+        AttacksPerSecond =+ 1f;
     }
 }

@@ -1,77 +1,107 @@
+
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class CannonProjectile : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float arcHeight = 1.5f;
-    [SerializeField] private float speed = 2f;
-    [SerializeField] private float travelDuration = 1.2f;
+    [SerializeField] private float launchSpeed = 8f;
+    [SerializeField] private float despawnTime = 4f;
 
-    private float areaOfEffect = 2f;
-    private Vector3 startPosition;
-    private Enemy target;
-    float damage;
-    private float travelTimer;
+    [Header("Explosion")]
+    [SerializeField] private float areaOfEffect = 2f;
+
+    private Rigidbody2D rb;
+    private Vector2 targetPosition;
+    private float damage;
+    private float lifetime;
+    private bool initialized;
+    private bool hasExploded;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+    }
 
     public void Initialize(Enemy target, float damage, float aoe)
     {
-        startPosition = transform.position;
-
-        this.target = target;
-        this.damage = damage;
-        areaOfEffect = aoe;
-    }
-
-    void Update()
-    {
-        CannonArcMovement();
-    }
-
-    private void CannonArcMovement()
-    {
-        if (target == null || !target.gameObject.activeInHierarchy)
+        if (target == null)
         {
-            Explode();
+            Destroy(gameObject);
             return;
         }
 
-        if (travelDuration <= 0f)
+        targetPosition = target.transform.position;
+        this.damage = damage;
+        areaOfEffect = aoe;
+
+        Vector2 startPosition = rb.position;
+        Vector2 direction = targetPosition - startPosition;
+
+        float flightTime = Mathf.Max(
+            Mathf.Abs(direction.x) / launchSpeed,
+            0.2f
+        );
+
+        float gravity = Physics2D.gravity.y * rb.gravityScale;
+
+        Vector2 velocity = new Vector2(
+            direction.x / flightTime,
+            (direction.y - 0.5f * gravity * flightTime * flightTime)
+                / flightTime
+        );
+
+        rb.linearVelocity = velocity;
+
+        initialized = true;
+    }
+
+    private void Update()
+    {
+        if (!initialized || hasExploded)
+            return;
+
+        lifetime += Time.deltaTime;
+
+        if (lifetime >= despawnTime)
         {
-            float distance = Vector3.Distance(
-                startPosition,
-                target.transform.position
-            );
-
-            travelDuration = Mathf.Max(distance / speed, 0.05f);
-            travelTimer = 0f;
+            Destroy(gameObject);
         }
+    }
 
-        travelTimer += Time.deltaTime;
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!initialized || hasExploded)
+            return;
 
-        float t = Mathf.Clamp01(travelTimer / travelDuration);
-        Vector3 endPosition = target.transform.position;
-
-        Vector3 position = Vector3.Lerp(startPosition, endPosition, t);
-        position.y += Mathf.Sin(t * Mathf.PI) * arcHeight;
-
-        transform.position = position;
-
-        Vector3 direction = endPosition - startPosition;
-
-        if (direction.sqrMagnitude > 0.001f)
+        if (collision.collider.GetComponentInParent<EnemyHealth>() != null ||
+            collision.collider.CompareTag("Debris") ||
+            collision.collider.transform.root.CompareTag("Debris"))
         {
-            float angle = Mathf.Atan2(direction.y, direction.x)
-                * Mathf.Rad2Deg;
-
-            transform.rotation = Quaternion.Euler(0f, 0f, angle);
-        }
-
-        if (t >= 1f)
             Explode();
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!initialized || hasExploded)
+            return;
+
+        if (other.GetComponentInParent<EnemyHealth>() != null ||
+            other.CompareTag("Debris") ||
+            other.transform.root.CompareTag("Debris"))
+        {
+            Explode();
+        }
     }
 
     private void Explode()
     {
+        if (hasExploded)
+            return;
+
+        hasExploded = true;
+
         DamageAllInRange(
             transform.position,
             areaOfEffect,
@@ -81,10 +111,10 @@ public class CannonProjectile : MonoBehaviour
         Destroy(gameObject);
     }
 
-    void DamageAllInRange(
+    private void DamageAllInRange(
         Vector2 center,
         float radius,
-        float damage)
+        float damageAmount)
     {
         EnemyHealth[] enemies = FindObjectsByType<EnemyHealth>(
             FindObjectsSortMode.None
@@ -97,11 +127,12 @@ public class CannonProjectile : MonoBehaviour
             if (enemy == null || !enemy.gameObject.activeInHierarchy)
                 continue;
 
-            Vector2 offset =
-                (Vector2)enemy.transform.position - center;
+            Vector2 offset = (Vector2)enemy.transform.position - center;
 
             if (offset.sqrMagnitude <= radiusSquared)
-                enemy.TakeDamage(damage);
+            {
+                enemy.TakeDamage(damageAmount);
+            }
         }
     }
 }

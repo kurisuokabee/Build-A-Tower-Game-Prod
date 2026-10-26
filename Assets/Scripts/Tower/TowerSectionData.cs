@@ -14,9 +14,7 @@ public class TowerSectionData : ScriptableObject
     public float attackRange = 5f;
     public float attacksPerSecond = 1f;
     public float damage = 10f;
-    public int projectileCount = 1;
-    
-    
+
 }
 
 public enum TowerUpgradeID

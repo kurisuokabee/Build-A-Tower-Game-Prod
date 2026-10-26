@@ -1,109 +1,275 @@
-using Unity.Mathematics;
+
+using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class ArrowProjectile : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float flightDuration = 1.2f;
-    [SerializeField] private float speed = 2f;
-    private Vector3 startPosition;
-    private Enemy target;
-    private float timer;
+    [SerializeField] private float speed = 8f;
+    [SerializeField] private float despawnTime = 3f;
 
-    EnemyHealth enemyHealth;
-    float damage;
+    [Header("Homing")]
+    [SerializeField] private float homingDelay = 0.5f;
+    [SerializeField] private float homingTurnSpeed = 360f;
 
-    public void Initialize(Enemy target, float damage) 
+    [Header("Returning Arrow")]
+    [SerializeField, Range(0f, 1f)]
+    private float returnDamageMultiplier = 0.5f;
+
+    [SerializeField] private float outboundDuration = 0.75f;
+
+    private Rigidbody2D rb;
+    private Enemy targetEnemy;
+    private Transform returnPoint;
+
+    private float damage;
+    private float lifetime;
+    private float outboundTimer;
+    private float homingTimer;
+
+    private bool initialized;
+    private bool piercing;
+    private bool returningEnabled;
+    private bool isReturning;
+    private bool homingEnabled;
+    private bool isHoming;
+
+    private readonly HashSet<EnemyHealth> hitEnemies = new();
+
+    private void Awake()
     {
-        startPosition = transform.position;
+        rb = GetComponent<Rigidbody2D>();
+    }
 
-        this.target = target;
-        enemyHealth = target.GetComponent<EnemyHealth>();
+    public void Initialize(
+        Enemy target,
+        float damage,
+        bool piercing = false,
+        bool returning = false,
+        Transform returnPoint = null,
+        float angleOffset = 0f,
+        bool homing = false)
+    {
+        if (target == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        targetEnemy = target;
         this.damage = damage;
+        this.piercing = piercing;
+        returningEnabled = returning;
+        this.returnPoint = returnPoint;
+        homingEnabled = homing;
+
+        Vector2 direction =
+            ((Vector2)target.transform.position - rb.position).normalized;
+
+        if (direction == Vector2.zero)
+            direction = Vector2.up;
+
+        direction = RotateDirection(direction, angleOffset);
+
+        SetDirection(direction);
+        initialized = true;
+    }
+
+    private Vector2 RotateDirection(Vector2 direction, float angle)
+    {
+        float radians = angle * Mathf.Deg2Rad;
+        float sin = Mathf.Sin(radians);
+        float cos = Mathf.Cos(radians);
+
+        return new Vector2(
+            direction.x * cos - direction.y * sin,
+            direction.x * sin + direction.y * cos
+        ).normalized;
     }
 
     private void Update()
     {
-        ArrowMovement();
-    }
+        if (!initialized)
+            return;
 
-    private void ArrowMovement()
-    {
-        if (target == null || !target.gameObject.activeInHierarchy)
+        lifetime += Time.deltaTime;
+
+        if (lifetime >= despawnTime)
         {
-            if (!FindNewTarget())
-            {
-                Destroy(gameObject);
-                return;
-            }
-        }
-
-        timer += Time.deltaTime * speed;
-        float t = Mathf.Clamp01(timer / flightDuration);
-
-        transform.position = Vector3.Lerp(
-            startPosition,
-            target.transform.position,
-            t
-        );
-
-        Vector3 direction = target.transform.position - transform.position;
-
-        if (direction.sqrMagnitude > 0.001f)
-        {
-            float angle = Mathf.Atan2(direction.y, direction.x)
-                * Mathf.Rad2Deg - 90f;
-
-            transform.rotation = Quaternion.AngleAxis(
-                angle,
-                Vector3.forward
-            );
-        }
-
-        if (t >= 1f)
-        {
-            if (enemyHealth != null)
-                enemyHealth.TakeDamage(damage);
-
             Destroy(gameObject);
+            return;
+        }
+
+        if (homingEnabled && !isReturning)
+        {
+            homingTimer += Time.deltaTime;
+
+            if (homingTimer >= homingDelay)
+                isHoming = true;
         }
     }
 
-    private bool FindNewTarget()
+    private void FixedUpdate()
     {
-        Enemy[] enemies = FindObjectsByType<Enemy>(
-            FindObjectsSortMode.None
-        );
+        if (!initialized)
+            return;
 
-        Enemy nearestEnemy = null;
+        if (returningEnabled && !isReturning)
+        {
+            outboundTimer += Time.fixedDeltaTime;
+
+            if (outboundTimer >= outboundDuration)
+                BeginReturn();
+        }
+
+        if (isReturning)
+        {
+            MoveTowardReturnPoint();
+            return;
+        }
+
+        if (homingEnabled)
+        {
+            if (!IsTargetValid(targetEnemy))
+                targetEnemy = FindNearestActiveEnemy();
+
+            if (isHoming && IsTargetValid(targetEnemy))
+                HomeTowardTarget();
+        }
+    }
+
+    private bool IsTargetValid(Enemy target)
+    {
+        return target != null &&
+               target.gameObject.activeInHierarchy;
+    }
+
+    private Enemy FindNearestActiveEnemy()
+    {
+        Enemy[] enemies =
+            FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+
+        Enemy nearest = null;
         float nearestDistance = float.MaxValue;
 
         foreach (Enemy enemy in enemies)
         {
-            if (enemy == null || !enemy.gameObject.activeInHierarchy)
+            if (!IsTargetValid(enemy))
                 continue;
 
             float distance = (
-                enemy.transform.position - transform.position
+                (Vector2)enemy.transform.position - rb.position
             ).sqrMagnitude;
 
             if (distance < nearestDistance)
             {
                 nearestDistance = distance;
-                nearestEnemy = enemy;
+                nearest = enemy;
             }
         }
 
-        if (nearestEnemy == null)
-            return false;
+        return nearest;
+    }
 
-        target = nearestEnemy;
-        enemyHealth = target.GetComponent<EnemyHealth>();
+    private void HomeTowardTarget()
+    {
+        Vector2 direction =
+            ((Vector2)targetEnemy.transform.position - rb.position).normalized;
 
-        // Start a fresh flight toward the new target.
-        startPosition = transform.position;
-        timer = 0f;
+        if (direction == Vector2.zero)
+            return;
 
-        return enemyHealth != null;
+        Vector2 currentDirection = rb.linearVelocity.normalized;
+
+        Vector2 newDirection = Vector2.MoveTowards(
+            currentDirection,
+            direction,
+            homingTurnSpeed * Mathf.Deg2Rad * Time.fixedDeltaTime
+        ).normalized;
+
+        SetDirection(newDirection);
+    }
+
+    private void MoveTowardReturnPoint()
+    {
+        if (returnPoint == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Vector2 toReturnPoint =
+            (Vector2)returnPoint.position - rb.position;
+
+        if (toReturnPoint.magnitude <= speed * Time.fixedDeltaTime)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        SetDirection(toReturnPoint.normalized);
+    }
+
+    private void BeginReturn()
+    {
+        isReturning = true;
+        isHoming = false;
+
+        // Allow the returning arrow to hit enemies again.
+        hitEnemies.Clear();
+    }
+
+    private void SetDirection(Vector2 direction)
+    {
+        rb.linearVelocity = direction * speed;
+
+        float angle = Mathf.Atan2(direction.y, direction.x)
+            * Mathf.Rad2Deg - 90f;
+
+        rb.rotation = angle;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        HandleHit(collision.collider);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        HandleHit(other);
+    }
+
+    private void HandleHit(Collider2D hit)
+    {
+        if (!initialized || hit == null)
+            return;
+
+        EnemyHealth enemyHealth =
+            hit.GetComponentInParent<EnemyHealth>();
+
+        if (enemyHealth != null)
+        {
+            if (hitEnemies.Add(enemyHealth))
+            {
+                float actualDamage = isReturning
+                    ? damage * returnDamageMultiplier
+                    : damage;
+
+                enemyHealth.TakeDamage(actualDamage);
+            }
+
+            if (!piercing)
+                Destroy(gameObject);
+
+            return;
+        }
+
+        bool isDebris =
+            hit.CompareTag("Debris") ||
+            hit.transform.root.CompareTag("Debris");
+
+        if (isDebris && !piercing)
+            Destroy(gameObject);
     }
 }

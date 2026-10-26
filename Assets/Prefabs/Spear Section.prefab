@@ -253,7 +253,7 @@ GameObject:
   - component: {fileID: 1943861942243901281}
   - component: {fileID: 7396202224520586370}
   m_Layer: 0
-  m_Name: 'TowerSpearSection '
+  m_Name: Spear Section
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1,11 +1,15 @@
+
 using UnityEngine;
 
-public class OrbLaserCombat : MonoBehaviour
+public class SakeroCombat : MonoBehaviour
 {
     [Header("Base Stats")]
     [SerializeField] private float baseDamage = 1f;
     [SerializeField] private float attacksPerSecond = 2f;
     [SerializeField] private float aoeRadius = 1f;
+
+    [Header("Target Detection")]
+    [SerializeField] private LayerMask enemyLayer;
 
     [Header("AOE Visual")]
     [SerializeField] private LineRenderer aoeLineRenderer;
@@ -51,14 +55,22 @@ public class OrbLaserCombat : MonoBehaviour
 
         UpdateAoeVisual(mouseWorldPos);
 
+        // Only activate the AOE while hovering over an enemy.
+        if (!IsCursorOnEnemy(mouseWorldPos))
+        {
+            tickTimer = 0f;
+            return;
+        }
+
         tickTimer += Time.deltaTime;
+
         float interval = 1f / CurrentAttacksPerSecond;
 
         if (tickTimer >= interval)
         {
             tickTimer -= interval;
 
-            DamageAllInRange(
+            DamageEnemiesInAoe(
                 mouseWorldPos,
                 CurrentAoeRadius,
                 CurrentDamage
@@ -66,9 +78,20 @@ public class OrbLaserCombat : MonoBehaviour
         }
     }
 
+    private bool IsCursorOnEnemy(Vector2 cursorPosition)
+    {
+        Collider2D hit = Physics2D.OverlapPoint(
+            cursorPosition,
+            enemyLayer
+        );
+
+        return hit != null &&
+               hit.GetComponentInParent<EnemyHealth>() != null;
+    }
+
     private void UpdateAoeVisual(Vector2 center)
     {
-        if (aoeLineRenderer == null)
+        if (aoeLineRenderer == null || circleSegments <= 0)
             return;
 
         float angleStep = 360f / circleSegments;
@@ -87,14 +110,7 @@ public class OrbLaserCombat : MonoBehaviour
         }
     }
 
-    public void ApplyUpgrade()
-    {
-        CurrentAttacksPerSecond += 0.1f;
-        CurrentDamage += 1f;
-        CurrentAoeRadius += 2f;
-    }
-
-    private void DamageAllInRange(
+    private void DamageEnemiesInAoe(
         Vector2 center,
         float radius,
         float damage)
@@ -116,5 +132,15 @@ public class OrbLaserCombat : MonoBehaviour
             if (offset.sqrMagnitude <= radiusSquared)
                 enemy.TakeDamage(damage);
         }
+    }
+
+    public void ApplyUpgrade(
+        float damageIncrease,
+        float attackSpeedIncrease,
+        float radiusIncrease)
+    {
+        CurrentDamage += damageIncrease;
+        CurrentAttacksPerSecond += attackSpeedIncrease;
+        CurrentAoeRadius += radiusIncrease;
     }
 }

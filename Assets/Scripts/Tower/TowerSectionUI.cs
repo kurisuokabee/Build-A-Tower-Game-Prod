@@ -1,6 +1,5 @@
+
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
 
@@ -8,41 +7,53 @@ public class TowerSectionUI : MonoBehaviour
 {
     [Header("Section")]
     [SerializeField] private TowerSection sectionPrefab;
-    [SerializeField] private TowerSectionGhost ghostPrefab;
     [SerializeField] private TowerBuilding tower;
+    [SerializeField] private TowerUpgradeID upgradeID;
 
-    [Header("UI")]
+    [Header("Build UI")]
     [SerializeField] private Button sectionButton;
     [SerializeField] private TMP_Text sectionNameText;
     [SerializeField] private TMP_Text blockCostText;
-    [SerializeField] private TMP_Text levelRequirementText;
+    [SerializeField] private TMP_Text levelText;
 
-    private TowerSectionGhost draggedGhost;
-    private bool isPlacing;
-    private bool canPlace;
+    [Header("Upgrade UI")]
+    [SerializeField] private Button upgradeButton;
+    [SerializeField] private TMP_Text resourceCostText;
 
     public static bool IsHoldingSection { get; private set; }
     public static bool IgnoreRelocatorClick { get; private set; }
 
     private PlayerEconomy economy;
+    private TowerSectionUpgrade upgradeManager;
 
     private void Start()
     {
         economy = PlayerEconomy.Instance;
-
-        UpdateSectionUI();
-
-        if (economy != null)
-            economy.OnResourcesChanged += UpdateSectionUI;
+        upgradeManager = TowerSectionUpgrade.Instance;
 
         if (sectionButton != null)
             sectionButton.onClick.AddListener(OnSectionButtonClicked);
+
+        if (upgradeButton != null)
+            upgradeButton.onClick.AddListener(OnUpgradeClicked);
+
+        SubscribeToEvents();
+        UpdateUI();
     }
 
     private void OnDestroy()
     {
+        if (sectionButton != null)
+            sectionButton.onClick.RemoveListener(OnSectionButtonClicked);
+
+        if (upgradeButton != null)
+            upgradeButton.onClick.RemoveListener(OnUpgradeClicked);
+
         if (economy != null)
-            economy.OnResourcesChanged -= UpdateSectionUI;
+            economy.OnResourcesChanged -= UpdateUI;
+
+        if (upgradeManager != null)
+            upgradeManager.OnUpgradesChanged -= UpdateUI;
     }
 
     private void Update()
@@ -50,98 +61,102 @@ public class TowerSectionUI : MonoBehaviour
         if (economy != PlayerEconomy.Instance)
         {
             if (economy != null)
-                economy.OnResourcesChanged -= UpdateSectionUI;
+                economy.OnResourcesChanged -= UpdateUI;
 
             economy = PlayerEconomy.Instance;
 
             if (economy != null)
-                economy.OnResourcesChanged += UpdateSectionUI;
+                economy.OnResourcesChanged += UpdateUI;
 
-            UpdateSectionUI();
+            UpdateUI();
         }
 
-        if (!isPlacing || Mouse.current == null)
-            return;
-
-        Vector3 mousePosition = MousePosition();
-
-        if (isCursorOverTower(mousePosition))
+        if (upgradeManager != TowerSectionUpgrade.Instance)
         {
-            int index = tower.GetInsertionIndex(mousePosition.y);
-            draggedGhost.transform.position =
-                tower.GetInsertionPosition(index);
-            draggedGhost.SetAlpha(0.5f);
+            if (upgradeManager != null)
+                upgradeManager.OnUpgradesChanged -= UpdateUI;
+
+            upgradeManager = TowerSectionUpgrade.Instance;
+
+            if (upgradeManager != null)
+                upgradeManager.OnUpgradesChanged += UpdateUI;
+
+            UpdateUI();
         }
-        else
-        {
-            draggedGhost.transform.position = mousePosition;
-            draggedGhost.SetAlpha(1f);
-        }
+    }
 
-        if (!Mouse.current.leftButton.isPressed)
-            canPlace = true;
+    private void SubscribeToEvents()
+    {
+        if (economy != null)
+            economy.OnResourcesChanged += UpdateUI;
 
-        if (canPlace && Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            if (isCursorOverTower(mousePosition))
+        if (upgradeManager != null)
+            upgradeManager.OnUpgradesChanged += UpdateUI;
+    }
+
+    public void UpdateUI()
+    {
+        if (sectionPrefab != null)
+        {   
+            int cost = tower != null
+                ? tower.GetCurrentBuildCost(sectionPrefab)
+                : sectionPrefab.BlockCost;
+
+            if (sectionNameText != null)
+                sectionNameText.text = sectionPrefab.name;
+
+            if (blockCostText != null)
+                blockCostText.text = $"{cost} Blocks";
+
+            if (levelText != null)
             {
-                int index = tower.GetInsertionIndex(mousePosition.y);
-                TowerSection newSection = Instantiate(sectionPrefab);
+                int level = upgradeManager != null
+                    ? upgradeManager.GetLevel(upgradeID)
+                    : 0;
 
-                if (!tower.InsertTowerSection(index, newSection))
-                {
-                    Destroy(newSection.gameObject);
-                }
-                else
-                {
-                    IgnoreRelocatorClick = true;
-                }
+                levelText.text = $"Level: {level}";
             }
 
-            CancelPlacement();
+            if (sectionButton != null)
+            {
+                 sectionButton.interactable =
+                    sectionPrefab.IsUnlocked &&
+                    tower != null &&
+                    PlayerEconomy.Instance != null &&
+                    PlayerEconomy.Instance.Blocks >= cost;
+            }
         }
 
-        if (Mouse.current.rightButton.wasPressedThisFrame)
-            CancelPlacement();
+        if (upgradeManager != null)
+        {
+            int expCost = upgradeManager.GetExpCost(upgradeID);
+
+            if (resourceCostText != null)
+                resourceCostText.text = $"{expCost} EXP";
+
+            if (upgradeButton != null)
+            {
+                bool hasSection =
+                    TowerBuilding.Instance != null &&
+                    TowerBuilding.Instance.HasSection(upgradeID);
+
+                upgradeButton.interactable =
+                    hasSection &&
+                    upgradeManager.CanUpgrade(upgradeID);
+            }
+        }
+        else if (upgradeButton != null)
+        {
+            upgradeButton.interactable = false;
+        }
     }
 
-    private void UpdateSectionUI()
+    private void OnSectionButtonClicked()
     {
-        if (sectionPrefab == null)
+        if (sectionPrefab == null || tower == null || economy == null)
             return;
 
-        if (sectionNameText != null)
-            sectionNameText.text = sectionPrefab.name;
-
-        if (blockCostText != null)
-            blockCostText.text = $"{sectionPrefab.BlockCost} Blocks";
-
-        if (levelRequirementText != null && !sectionPrefab.IsUnlocked)
-        {
-            levelRequirementText.text =
-                $"Locked until Level {sectionPrefab.RequiredLevel}";
-        }
-        else 
-        {
-            levelRequirementText.text = "";
-        }
-            
-
-        bool unlocked = sectionPrefab.IsUnlocked;
-
-        if (sectionButton != null)
-            sectionButton.interactable =
-            sectionPrefab != null &&
-            sectionPrefab.IsUnlocked &&
-            sectionPrefab.CanAfford;
-    }
-
-    public void OnSectionButtonClicked()
-    {
-        if (isPlacing || sectionPrefab == null || ghostPrefab == null)
-            return;
-
-        if (economy == null || !sectionPrefab.IsUnlocked)
+        if (!sectionPrefab.IsUnlocked)
             return;
 
         if (!sectionPrefab.CanAfford)
@@ -150,47 +165,24 @@ public class TowerSectionUI : MonoBehaviour
             return;
         }
 
-        draggedGhost = Instantiate(ghostPrefab);
-        draggedGhost.SetSprite(sectionPrefab);
-        draggedGhost.SetAlpha(1f);
+        TowerSection newSection = Instantiate(sectionPrefab);
 
-        isPlacing = true;
-        canPlace = false;
-        IsHoldingSection = true;
+        if (!tower.BuildTowerSection(newSection))
+        {
+            Destroy(newSection.gameObject);
+            return;
+        }
+
+        UpdateUI();
     }
 
-    private bool isCursorOverTower(Vector3 mousePosition)
+    private void OnUpgradeClicked()
     {
-        if (tower == null || sectionPrefab == null)
-            return false;
+        if (upgradeManager == null)
+            return;
 
-        float halfWidth = sectionPrefab.width / 2f;
-
-        return mousePosition.x >= tower.transform.position.x - halfWidth &&
-               mousePosition.x <= tower.transform.position.x + halfWidth &&
-               mousePosition.y >= tower.GetBottomY() &&
-               mousePosition.y <= tower.GetTopY();
-    }
-
-    private Vector3 MousePosition()
-    {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(
-            Mouse.current.position.ReadValue()
-        );
-
-        mousePosition.z = 0f;
-        return mousePosition;
-    }
-
-    private void CancelPlacement()
-    {
-        if (draggedGhost != null)
-            Destroy(draggedGhost.gameObject);
-
-        draggedGhost = null;
-        isPlacing = false;
-        canPlace = false;
-        IsHoldingSection = false;
+        upgradeManager.Upgrade(upgradeID);
+        UpdateUI();
     }
 
     public static void ClearRelocatorClick()

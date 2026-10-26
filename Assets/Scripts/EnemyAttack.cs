@@ -20,7 +20,6 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private float projectileSpeed = 6f;
 
     private TowerSection target;
-    private TowerHealth towerHealth;
     private float attackTimer;
 
     public AttackType CurrentAttackType => attackType;
@@ -32,8 +31,6 @@ public class EnemyAttack : MonoBehaviour
         attackTimer = 0f;
 
         attackRange = range;
-
-        towerHealth = target.GetComponentInParent<TowerHealth>();
     }
 
     private void Update()
@@ -61,8 +58,7 @@ public class EnemyAttack : MonoBehaviour
 
     private void MeleeAttack()
     {
-        if (towerHealth != null)
-            towerHealth.TakeDamage(damage);
+        
     }
 
     private void RangedAttack()

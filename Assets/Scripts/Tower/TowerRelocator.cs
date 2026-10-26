@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -10,15 +11,20 @@ public class TowerSectionRelocator : MonoBehaviour
     private TowerSection selectedSection;
     private TowerSectionGhost draggedGhost;
 
-    
     private void Update()
-    {   
+    {
         if (TowerSectionUI.IsHoldingSection)
-        return;
+            return;
 
         if (TowerSectionUI.IgnoreRelocatorClick)
         {
             TowerSectionUI.ClearRelocatorClick();
+            return;
+        }
+
+        if (TowerRelocationMode.Instance == null ||
+            !TowerRelocationMode.Instance.IsRelocationMode)
+        {
             return;
         }
 
@@ -41,7 +47,6 @@ public class TowerSectionRelocator : MonoBehaviour
 
         if (IsPointerOverUI())
         {
-            // Cancel relocation when clicking UI.
             if (selectedSection != null)
                 CancelMove();
 
@@ -57,6 +62,25 @@ public class TowerSectionRelocator : MonoBehaviour
             UpdateGhost();
     }
 
+    private void OnEnable()
+    {
+        if (TowerRelocationMode.Instance != null)
+            TowerRelocationMode.Instance.OnModeChanged += HandleModeChanged;
+    }
+
+    private void OnDisable()
+    {
+        if (TowerRelocationMode.Instance != null)
+            TowerRelocationMode.Instance.OnModeChanged -= HandleModeChanged;
+
+        CancelMove();
+    }
+
+    private void HandleModeChanged(bool relocationEnabled)
+    {
+        if (!relocationEnabled)
+            CancelMove();
+    }
 
     private Vector3 MousePosition()
     {
@@ -64,12 +88,15 @@ public class TowerSectionRelocator : MonoBehaviour
             Mouse.current.position.ReadValue()
         );
 
-        position.z = 0;
+        position.z = 0f;
         return position;
     }
 
     private void TrySelectSection()
     {
+        if (tower == null || ghostPrefab == null)
+            return;
+
         Vector3 mousePosition = MousePosition();
 
         selectedSection = tower.GetSectionAtPosition(mousePosition);
@@ -84,11 +111,17 @@ public class TowerSectionRelocator : MonoBehaviour
 
     private void UpdateGhost()
     {
+        if (draggedGhost == null)
+            return;
+
         draggedGhost.transform.position = MousePosition();
     }
 
     private void TrySwapSection()
     {
+        if (tower == null)
+            return;
+
         Vector3 mousePosition = MousePosition();
 
         TowerSection targetSection =
@@ -104,18 +137,16 @@ public class TowerSectionRelocator : MonoBehaviour
 
     private void CancelMove()
     {
-        if (selectedSection == null)
-            return;
+        if (draggedGhost != null)
+            Destroy(draggedGhost.gameObject);
 
-        FinishMove();
+        selectedSection = null;
+        draggedGhost = null;
     }
 
     private void FinishMove()
     {
-        Destroy(draggedGhost.gameObject);
-
-        selectedSection = null;
-        draggedGhost = null;
+        CancelMove();
     }
 
     private bool IsPointerOverUI()

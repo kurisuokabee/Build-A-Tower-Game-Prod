@@ -86,24 +86,10 @@ public class TowerFlame : TowerSection
         }
     }
 
-    public override void ApplyUpgrade(bool isSpecialUpgrade)
+    public override void ApplyUpgrade()
     {
-        if (isSpecialUpgrade)
-        {
-            foreach (ParticleSystem particle in particleSystemRef)
-            {
-                if (particle == null)
-                    continue;
-
-                var main = particle.main;
-                main.startLifetimeMultiplier += .2f;
-            }
-        }
-        else
-        {
-            Damage += 1;
-            playDuration += .1f;
-            cooldownTime += .1f;
-        }
+        Damage += 1;
+        playDuration += .1f;
+        cooldownTime += .1f;
     }
 }

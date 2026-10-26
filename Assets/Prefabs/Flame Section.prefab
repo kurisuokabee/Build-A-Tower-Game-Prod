@@ -9680,7 +9680,7 @@ GameObject:
   - component: {fileID: 2304904919478606005}
   - component: {fileID: 82259870041714361}
   m_Layer: 0
-  m_Name: TowerFlameSection
+  m_Name: Flame Section
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
