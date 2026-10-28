@@ -10,7 +10,7 @@ public class SakeroCombatUpgrade : MonoBehaviour
     [Header("Upgrade Increases")]
     [SerializeField] private float damagePerUpgrade = 1f;
     [SerializeField] private float attacksPerSecondPerUpgrade = 0.1f;
-    [SerializeField] private float aoeRadiusPerUpgrade = 1f;
+    
 
     [Header("Upgrade Costs")]
     [SerializeField] private int baseBlockCost = 100;
@@ -73,8 +73,7 @@ public class SakeroCombatUpgrade : MonoBehaviour
 
         sakeroCombat.ApplyUpgrade(
             damagePerUpgrade,
-            attacksPerSecondPerUpgrade,
-            aoeRadiusPerUpgrade
+            attacksPerSecondPerUpgrade
         );
 
         UpgradeLevel++;

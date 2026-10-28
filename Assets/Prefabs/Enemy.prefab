@@ -13,10 +13,10 @@ GameObject:
   - component: {fileID: 8324785385851811432}
   - component: {fileID: 1323277086985306164}
   - component: {fileID: -5322605307697249553}
-  - component: {fileID: -4461358950146441157}
-  - component: {fileID: 8215872391876397120}
   - component: {fileID: 6865732627042034392}
   - component: {fileID: 7252012769497436063}
+  - component: {fileID: -8016412967494616467}
+  - component: {fileID: 1335756900721854047}
   m_Layer: 3
   m_Name: Enemy
   m_TagString: Enemy
@@ -144,33 +144,6 @@ MonoBehaviour:
   enemyMovement: {fileID: 0}
   enemyAttack: {fileID: 0}
   spriteRenderer: {fileID: 0}
---- !u!114 &-4461358950146441157
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7049896600385680556}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0049e97b8a8deb2428a40636cd951ce7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 30
---- !u!114 &8215872391876397120
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7049896600385680556}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5954475e2da6bce409677534da21bf55, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  blocksReward: 5
-  expReward: 10
 --- !u!114 &6865732627042034392
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -229,3 +202,32 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &-8016412967494616467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7049896600385680556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12f7607138af9ec45b33bb5f30515a97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+--- !u!114 &1335756900721854047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7049896600385680556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f217d7bd4f497f448e3aa0330e8a288, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blocksReward: 5
+  expReward: 10
+  applyExtraBlocksBonus: 0
+  upgradePointChance: 0

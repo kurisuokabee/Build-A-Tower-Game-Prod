@@ -7,36 +7,67 @@ public class TowerCannon : TowerSection
     [Header("Projectile")]
     [SerializeField] private Transform firePoint;
     [SerializeField] private CannonProjectile cannonPrefab;
-    private float areaOfEffect = 2;
-    private int ProjectileCount;
-    protected override List<Enemy> FindTargets()
+
+    [Header("Cannon Settings")]
+    [SerializeField] private float areaOfEffect = 2f;
+    [SerializeField] private int projectileCount = 1;
+
+    protected override IReadOnlyList<AttackableHealth> FindTargets()
     {
-        return FindNearestEnemies(ProjectileCount);
+        return FindNearestTargets(projectileCount);
     }
 
-    protected override void Attack(List<Enemy> targets)
+    protected override void Attack(
+        IReadOnlyList<AttackableHealth> targets)
     {
         if (firePoint == null || cannonPrefab == null)
             return;
 
-        foreach (Enemy target in targets)
+        if (ObjectPoolManager.Instance == null)
         {
-            if (target == null || !target.gameObject.activeInHierarchy)
+            Debug.LogError("ObjectPoolManager is missing from the scene.");
+            return;
+        }
+
+        foreach (AttackableHealth target in targets)
+        {
+            if (target == null ||
+                !target.gameObject.activeInHierarchy ||
+                !target.IsAlive)
+            {
+                continue;
+            }
+
+            GameObject projectileObject =
+                ObjectPoolManager.Instance.GetObject(
+                    cannonPrefab.gameObject,
+                    firePoint.position,
+                    Quaternion.identity
+                );
+
+            if (projectileObject == null)
                 continue;
 
-            CannonProjectile projectile = Instantiate(
-                cannonPrefab,
-                firePoint.position,
-                Quaternion.identity
-            );
+            CannonProjectile projectile =
+                projectileObject.GetComponent<CannonProjectile>();
 
-            projectile.Initialize(target, Damage, areaOfEffect);
+            if (projectile == null)
+            {
+                Debug.LogError(
+                    "Cannon prefab is missing CannonProjectile."
+                );
+
+                ObjectPoolManager.Instance.ReturnObject(projectileObject);
+                continue;
+            }
+
+            projectile.Initialize(target, EffectiveDamage, areaOfEffect);
         }
     }
 
     public override void ApplyUpgrade()
     {
         Damage += 1f;
-        AttacksPerSecond =+ 1f;
+        AttacksPerSecond += 0.1f;
     }
 }

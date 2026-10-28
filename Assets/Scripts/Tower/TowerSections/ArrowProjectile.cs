@@ -20,8 +20,9 @@ public class ArrowProjectile : MonoBehaviour
     [SerializeField] private float outboundDuration = 0.75f;
 
     private Rigidbody2D rb;
-    private Enemy targetEnemy;
+    private AttackableHealth target;
     private Transform returnPoint;
+    private PooledObject pooledObject;
 
     private float damage;
     private float lifetime;
@@ -35,15 +36,16 @@ public class ArrowProjectile : MonoBehaviour
     private bool homingEnabled;
     private bool isHoming;
 
-    private readonly HashSet<EnemyHealth> hitEnemies = new();
+    private readonly HashSet<AttackableHealth> hitTargets = new();
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        pooledObject = GetComponent<PooledObject>();
     }
 
     public void Initialize(
-        Enemy target,
+        AttackableHealth target,
         float damage,
         bool piercing = false,
         bool returning = false,
@@ -51,18 +53,31 @@ public class ArrowProjectile : MonoBehaviour
         float angleOffset = 0f,
         bool homing = false)
     {
-        if (target == null)
+        if (target == null || !target.IsAlive)
         {
-            Destroy(gameObject);
+            ReturnToPool();
             return;
         }
 
-        targetEnemy = target;
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+
+        this.target = target;
         this.damage = damage;
         this.piercing = piercing;
         returningEnabled = returning;
         this.returnPoint = returnPoint;
         homingEnabled = homing;
+
+        lifetime = 0f;
+        outboundTimer = 0f;
+        homingTimer = 0f;
+
+        initialized = true;
+        isReturning = false;
+        isHoming = false;
+
+        hitTargets.Clear();
 
         Vector2 direction =
             ((Vector2)target.transform.position - rb.position).normalized;
@@ -71,9 +86,7 @@ public class ArrowProjectile : MonoBehaviour
             direction = Vector2.up;
 
         direction = RotateDirection(direction, angleOffset);
-
         SetDirection(direction);
-        initialized = true;
     }
 
     private Vector2 RotateDirection(Vector2 direction, float angle)
@@ -97,7 +110,7 @@ public class ArrowProjectile : MonoBehaviour
 
         if (lifetime >= despawnTime)
         {
-            Destroy(gameObject);
+            ReturnToPool();
             return;
         }
 
@@ -131,51 +144,30 @@ public class ArrowProjectile : MonoBehaviour
 
         if (homingEnabled)
         {
-            if (!IsTargetValid(targetEnemy))
-                targetEnemy = FindNearestActiveEnemy();
+            if (!IsTargetValid(target))
+                target = FindNearestTarget();
 
-            if (isHoming && IsTargetValid(targetEnemy))
+            if (isHoming && IsTargetValid(target))
                 HomeTowardTarget();
         }
     }
 
-    private bool IsTargetValid(Enemy target)
+    private bool IsTargetValid(AttackableHealth attackable)
     {
-        return target != null &&
-               target.gameObject.activeInHierarchy;
+        return attackable != null &&
+               attackable.isActiveAndEnabled &&
+               attackable.IsAlive;
     }
 
-    private Enemy FindNearestActiveEnemy()
+    private AttackableHealth FindNearestTarget()
     {
-        Enemy[] enemies =
-            FindObjectsByType<Enemy>(FindObjectsSortMode.None);
-
-        Enemy nearest = null;
-        float nearestDistance = float.MaxValue;
-
-        foreach (Enemy enemy in enemies)
-        {
-            if (!IsTargetValid(enemy))
-                continue;
-
-            float distance = (
-                (Vector2)enemy.transform.position - rb.position
-            ).sqrMagnitude;
-
-            if (distance < nearestDistance)
-            {
-                nearestDistance = distance;
-                nearest = enemy;
-            }
-        }
-
-        return nearest;
+        return AttackableTargetFinder.FindNearestTarget(rb.position);
     }
 
     private void HomeTowardTarget()
     {
         Vector2 direction =
-            ((Vector2)targetEnemy.transform.position - rb.position).normalized;
+            ((Vector2)target.transform.position - rb.position).normalized;
 
         if (direction == Vector2.zero)
             return;
@@ -195,7 +187,7 @@ public class ArrowProjectile : MonoBehaviour
     {
         if (returnPoint == null)
         {
-            Destroy(gameObject);
+            ReturnToPool();
             return;
         }
 
@@ -204,7 +196,7 @@ public class ArrowProjectile : MonoBehaviour
 
         if (toReturnPoint.magnitude <= speed * Time.fixedDeltaTime)
         {
-            Destroy(gameObject);
+            ReturnToPool();
             return;
         }
 
@@ -215,9 +207,7 @@ public class ArrowProjectile : MonoBehaviour
     {
         isReturning = true;
         isHoming = false;
-
-        // Allow the returning arrow to hit enemies again.
-        hitEnemies.Clear();
+        hitTargets.Clear();
     }
 
     private void SetDirection(Vector2 direction)
@@ -230,11 +220,6 @@ public class ArrowProjectile : MonoBehaviour
         rb.rotation = angle;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        HandleHit(collision.collider);
-    }
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         HandleHit(other);
@@ -245,22 +230,22 @@ public class ArrowProjectile : MonoBehaviour
         if (!initialized || hit == null)
             return;
 
-        EnemyHealth enemyHealth =
-            hit.GetComponentInParent<EnemyHealth>();
+        AttackableHealth attackable =
+            hit.GetComponentInParent<AttackableHealth>();
 
-        if (enemyHealth != null)
+        if (attackable != null)
         {
-            if (hitEnemies.Add(enemyHealth))
+            if (IsTargetValid(attackable) && hitTargets.Add(attackable))
             {
                 float actualDamage = isReturning
                     ? damage * returnDamageMultiplier
                     : damage;
 
-                enemyHealth.TakeDamage(actualDamage);
+                attackable.TakeDamage(actualDamage);
             }
 
             if (!piercing)
-                Destroy(gameObject);
+                ReturnToPool();
 
             return;
         }
@@ -270,6 +255,28 @@ public class ArrowProjectile : MonoBehaviour
             hit.transform.root.CompareTag("Debris");
 
         if (isDebris && !piercing)
-            Destroy(gameObject);
+            ReturnToPool();
+    }
+
+    private void ReturnToPool()
+    {
+        if (!initialized)
+            return;
+
+        initialized = false;
+        target = null;
+        returnPoint = null;
+
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+
+        hitTargets.Clear();
+
+        if (pooledObject != null)
+            pooledObject.ReturnToPool();
+        else if (ObjectPoolManager.Instance != null)
+            ObjectPoolManager.Instance.ReturnObject(gameObject);
+        else
+            gameObject.SetActive(false);
     }
 }

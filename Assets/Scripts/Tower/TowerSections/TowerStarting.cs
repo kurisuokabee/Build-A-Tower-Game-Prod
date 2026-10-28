@@ -8,11 +8,12 @@ public class TowerStarting : TowerSection
         throw new System.NotImplementedException();
     }
 
-    protected override void Attack(List<Enemy> targets)
+    protected override void Attack(IReadOnlyList<AttackableHealth> targets)
     {
+        throw new System.NotImplementedException();
     }
 
-    protected override List<Enemy> FindTargets()
+    protected override IReadOnlyList<AttackableHealth> FindTargets()
     {
         throw new System.NotImplementedException();
     }

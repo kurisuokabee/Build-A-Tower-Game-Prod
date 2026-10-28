@@ -7,6 +7,7 @@ public class PlayerEconomyUI : MonoBehaviour
     [Header("Resource Text")]
     [SerializeField] private TMP_Text blocksText;
     [SerializeField] private TMP_Text expText;
+    [SerializeField] private TMP_Text uPointsText;
 
     [Header("Level UI")]
     [SerializeField] private Slider expSlider;
@@ -57,5 +58,8 @@ public class PlayerEconomyUI : MonoBehaviour
 
         if (levelText != null)
             levelText.text = $"Level {economy.Level}";
+
+        if (uPointsText != null)
+            uPointsText.text = $"UPoints:{economy.UpgradePoints}";
     }
 }

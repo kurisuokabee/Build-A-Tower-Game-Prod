@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,6 +17,7 @@ public class TowerSpear : TowerSection
     [SerializeField] private float spearReach = 2f;
     [SerializeField] private float thrustDuration = 0.15f;
     [SerializeField] private float retractDuration = 0.15f;
+    [SerializeField] private float verticalHitRange = 0.5f;
 
     private Vector3 leftRestPosition;
     private Vector3 rightRestPosition;
@@ -25,6 +27,14 @@ public class TowerSpear : TowerSection
 
     private Vector3 leftHandleScale;
     private Vector3 rightHandleScale;
+
+    private SpriteRenderer leftHandleRenderer;
+    private SpriteRenderer rightHandleRenderer;
+
+    private float leftHandleBaseWidth;
+    private float rightHandleBaseWidth;
+
+    private readonly List<AttackableHealth> targetBuffer = new();
 
     private Coroutine attackRoutine;
 
@@ -38,61 +48,101 @@ public class TowerSpear : TowerSection
         if (rightSpear != null)
             rightRestPosition = rightSpear.localPosition;
 
-        if (leftHandleSprite != null)
-        {
-            leftHandlePosition = leftHandleSprite.localPosition;
-            leftHandleScale = leftHandleSprite.localScale;
-        }
+        CacheHandle(
+            leftHandleSprite,
+            out leftHandlePosition,
+            out leftHandleScale,
+            out leftHandleRenderer,
+            out leftHandleBaseWidth
+        );
 
-        if (rightHandleSprite != null)
-        {
-            rightHandlePosition = rightHandleSprite.localPosition;
-            rightHandleScale = rightHandleSprite.localScale;
-        }
+        CacheHandle(
+            rightHandleSprite,
+            out rightHandlePosition,
+            out rightHandleScale,
+            out rightHandleRenderer,
+            out rightHandleBaseWidth
+        );
 
         UpdateHandleLengths();
     }
 
-    protected override List<Enemy> FindTargets()
+    private void CacheHandle(
+        Transform handle,
+        out Vector3 originalPosition,
+        out Vector3 originalScale,
+        out SpriteRenderer renderer,
+        out float baseWidth)
     {
-        List<Enemy> targets = new List<Enemy>();
+        originalPosition = handle != null
+            ? handle.localPosition
+            : Vector3.zero;
 
-        Enemy[] enemies = FindObjectsByType<Enemy>(
-            FindObjectsSortMode.None
-        );
+        originalScale = handle != null
+            ? handle.localScale
+            : Vector3.one;
 
-        foreach (Enemy enemy in enemies)
+        renderer = handle != null
+            ? handle.GetComponent<SpriteRenderer>()
+            : null;
+
+        baseWidth = 0f;
+
+        if (renderer != null && renderer.sprite != null)
         {
-            if (enemy == null || !enemy.gameObject.activeInHierarchy)
+            baseWidth =
+                renderer.sprite.bounds.size.x *
+                Mathf.Abs(originalScale.x);
+        }
+    }
+
+    protected override IReadOnlyList<AttackableHealth> FindTargets()
+    {
+        targetBuffer.Clear();
+
+        IReadOnlyList<AttackableHealth> targets =
+            AttackableTargetRegistry.Targets;
+
+        float originX = transform.position.x;
+        float originY = transform.position.y;
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            AttackableHealth target = targets[i];
+
+            if (target == null ||
+                !target.isActiveAndEnabled ||
+                !target.IsAlive)
+            {
                 continue;
+            }
 
-            float distanceX = Mathf.Abs(
-                enemy.transform.position.x - transform.position.x
-            );
+            Vector3 position = target.transform.position;
 
-            float distanceY = Mathf.Abs(
-                enemy.transform.position.y - transform.position.y
-            );
-
-            if (distanceX <= spearReach && distanceY <= 0.5f)
-                targets.Add(enemy);
+            if (Mathf.Abs(position.x - originX) <= spearReach &&
+                Mathf.Abs(position.y - originY) <= verticalHitRange)
+            {
+                targetBuffer.Add(target);
+            }
         }
 
-        return targets;
+        return targetBuffer;
     }
 
-    protected override void Attack(List<Enemy> targets)
+    protected override void Attack(
+        IReadOnlyList<AttackableHealth> targets)
     {
-        if (leftSpear == null || rightSpear == null)
+        if (leftSpear == null ||
+            rightSpear == null ||
+            attackRoutine != null)
+        {
             return;
+        }
 
-        if (attackRoutine != null)
-            return;
-
-        attackRoutine = StartCoroutine(ThrustRoutine(targets));
+        attackRoutine = StartCoroutine(ThrustRoutine());
     }
 
-    private IEnumerator ThrustRoutine(List<Enemy> targets)
+    private IEnumerator ThrustRoutine()
     {
         Vector3 leftExtended =
             leftRestPosition + Vector3.left * spearReach;
@@ -108,26 +158,7 @@ public class TowerSpear : TowerSection
             thrustDuration
         );
 
-        foreach (Enemy enemy in targets)
-        {
-            if (enemy == null || !enemy.gameObject.activeInHierarchy)
-                continue;
-
-            float distanceX = Mathf.Abs(
-                enemy.transform.position.x - transform.position.x
-            );
-
-            float distanceY = Mathf.Abs(
-                enemy.transform.position.y - transform.position.y
-            );
-
-            if (distanceX <= spearReach && distanceY <= 0.5f)
-            {
-                EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
-
-                enemyHealth.TakeDamage(Damage);
-            }
-        }
+        DamageTargetsInRange();
 
         yield return MoveSpears(
             leftExtended,
@@ -140,6 +171,35 @@ public class TowerSpear : TowerSection
         attackRoutine = null;
     }
 
+    private void DamageTargetsInRange()
+    {
+        IReadOnlyList<AttackableHealth> targets =
+            AttackableTargetRegistry.Targets;
+
+        float originX = transform.position.x;
+        float originY = transform.position.y;
+
+        for (int i = targets.Count - 1; i >= 0; i--)
+        {
+            AttackableHealth target = targets[i];
+
+            if (target == null ||
+                !target.isActiveAndEnabled ||
+                !target.IsAlive)
+            {
+                continue;
+            }
+
+            Vector3 position = target.transform.position;
+
+            if (Mathf.Abs(position.x - originX) <= spearReach &&
+                Mathf.Abs(position.y - originY) <= verticalHitRange)
+            {
+                target.TakeDamage(EffectiveDamage);
+            }
+        }
+    }
+
     private IEnumerator MoveSpears(
         Vector3 leftFrom,
         Vector3 leftTo,
@@ -147,6 +207,14 @@ public class TowerSpear : TowerSection
         Vector3 rightTo,
         float duration)
     {
+        if (duration <= 0f)
+        {
+            leftSpear.localPosition = leftTo;
+            rightSpear.localPosition = rightTo;
+            UpdateHandleLengths();
+            yield break;
+        }
+
         float timer = 0f;
 
         while (timer < duration)
@@ -154,8 +222,11 @@ public class TowerSpear : TowerSection
             timer += Time.deltaTime;
             float t = Mathf.Clamp01(timer / duration);
 
-            leftSpear.localPosition = Vector3.Lerp(leftFrom, leftTo, t);
-            rightSpear.localPosition = Vector3.Lerp(rightFrom, rightTo, t);
+            leftSpear.localPosition =
+                Vector3.Lerp(leftFrom, leftTo, t);
+
+            rightSpear.localPosition =
+                Vector3.Lerp(rightFrom, rightTo, t);
 
             UpdateHandleLengths();
 
@@ -176,6 +247,7 @@ public class TowerSpear : TowerSection
             leftRestPosition,
             leftHandlePosition,
             leftHandleScale,
+            leftHandleBaseWidth,
             -1f
         );
 
@@ -185,6 +257,7 @@ public class TowerSpear : TowerSection
             rightRestPosition,
             rightHandlePosition,
             rightHandleScale,
+            rightHandleBaseWidth,
             1f
         );
     }
@@ -195,19 +268,10 @@ public class TowerSpear : TowerSection
         Vector3 restPosition,
         Vector3 originalPosition,
         Vector3 originalScale,
+        float baseWidth,
         float direction)
     {
-        if (spear == null || handle == null)
-            return;
-
-        SpriteRenderer renderer = handle.GetComponent<SpriteRenderer>();
-
-        if (renderer == null || renderer.sprite == null)
-            return;
-
-        float originalWidth = renderer.sprite.bounds.size.x;
-
-        if (originalWidth <= 0f)
+        if (spear == null || handle == null || baseWidth <= 0f)
             return;
 
         float extension = Mathf.Abs(
@@ -215,10 +279,7 @@ public class TowerSpear : TowerSection
         );
 
         Vector3 scale = originalScale;
-        scale.x = originalScale.x *
-            (originalWidth * Mathf.Abs(originalScale.x) + extension) /
-            (originalWidth * Mathf.Abs(originalScale.x));
-
+        scale.x = originalScale.x * (baseWidth + extension) / baseWidth;
         handle.localScale = scale;
 
         Vector3 position = originalPosition;
@@ -240,8 +301,17 @@ public class TowerSpear : TowerSection
         if (rightSpear != null)
             rightSpear.localPosition = rightRestPosition;
 
-        ResetHandle(leftHandleSprite, leftHandlePosition, leftHandleScale);
-        ResetHandle(rightHandleSprite, rightHandlePosition, rightHandleScale);
+        ResetHandle(
+            leftHandleSprite,
+            leftHandlePosition,
+            leftHandleScale
+        );
+
+        ResetHandle(
+            rightHandleSprite,
+            rightHandlePosition,
+            rightHandleScale
+        );
     }
 
     private void ResetHandle(
@@ -259,6 +329,6 @@ public class TowerSpear : TowerSection
     public override void ApplyUpgrade()
     {
         Damage += 1f;
-        AttacksPerSecond =+ 1f;
+        AttacksPerSecond += 0.1f;
     }
 }

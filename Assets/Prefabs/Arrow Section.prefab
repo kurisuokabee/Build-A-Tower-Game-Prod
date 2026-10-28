@@ -190,8 +190,8 @@ MonoBehaviour:
   - choice: 4
     upgradeName: Barrage
     description: 
-  - choice: 4
-    upgradeName: Barrage
+  - choice: 6
+    upgradeName: Multi-Shot II
     description: 
   selectedBranch: 0
   selectedSpecialization: 0

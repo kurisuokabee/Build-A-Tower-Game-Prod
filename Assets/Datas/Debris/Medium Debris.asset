@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978b66a1973a8f34a8c8a988657daf14, type: 3}
+  m_Name: Medium Debris
+  m_EditorClassIdentifier: 
+  size: 1
+  prefab: {fileID: 6231459635095629281, guid: f0064f42febcd5d4aa4045524a82deb5, type: 3}
+  sprite: {fileID: 0}
+  maxHealth: 60
+  minFallSpeed: 0.8
+  maxFallSpeed: 1.3
+  baseExp: 8
+  baseBlocks: 8
+  upgradePointChance: 0.03

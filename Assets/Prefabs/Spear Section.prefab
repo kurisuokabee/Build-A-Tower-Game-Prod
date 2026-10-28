@@ -346,16 +346,16 @@ MonoBehaviour:
   height: 1
   width: 1
   sectionData: {fileID: 11400000, guid: cd4a6017b6d1d894eb068567cf282e2d, type: 2}
-  enemyFinder: {fileID: 7396202224520586370}
   leftSpear: {fileID: 7601668217970952002}
   rightSpear: {fileID: 5860932048790672114}
   leftHandleSprite: {fileID: 538633876672907031}
   rightHandleSprite: {fileID: 4167498460833519094}
   leftHead: {fileID: 5672862414119484022}
   rightHead: {fileID: 7617572056157287259}
-  spearReach: 2
+  spearReach: 4
   thrustDuration: 0.2
   retractDuration: 0.2
+  verticalHitRange: 0.5
 --- !u!114 &7396202224520586370
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -6,57 +6,59 @@ public class SakeroCombat : MonoBehaviour
     [Header("Base Stats")]
     [SerializeField] private float baseDamage = 1f;
     [SerializeField] private float attacksPerSecond = 2f;
-    [SerializeField] private float aoeRadius = 1f;
 
-    [Header("Target Detection")]
+    [Header("Projectile")]
+    [SerializeField] private SakeroMagicProjectile projectilePrefab;
+    [SerializeField] private Transform muzzlePoint;
+    [SerializeField] private float projectileSpawnOffset = 0.3f;
     [SerializeField] private LayerMask enemyLayer;
 
-    [Header("AOE Visual")]
-    [SerializeField] private LineRenderer aoeLineRenderer;
-    [SerializeField] private int circleSegments = 48;
-    [SerializeField] private float lineWidth = 0.05f;
+    [Header("Serenity Settings")]
+    [SerializeField] private float serenityRange = 5f;
 
     private float tickTimer;
     private Camera mainCamera;
 
     public float CurrentDamage { get; private set; }
     public float CurrentAttacksPerSecond { get; private set; }
-    public float CurrentAoeRadius { get; private set; }
 
     private void Awake()
     {
         CurrentDamage = baseDamage;
         CurrentAttacksPerSecond = attacksPerSecond;
-        CurrentAoeRadius = aoeRadius;
-
         mainCamera = Camera.main;
-
-        if (aoeLineRenderer != null)
-        {
-            aoeLineRenderer.positionCount = circleSegments;
-            aoeLineRenderer.useWorldSpace = true;
-            aoeLineRenderer.loop = true;
-            aoeLineRenderer.startWidth = lineWidth;
-            aoeLineRenderer.endWidth = lineWidth;
-            aoeLineRenderer.enabled = true;
-        }
     }
 
     private void Update()
     {
-        if (mainCamera == null || CurrentAttacksPerSecond <= 0f)
+        if (mainCamera == null ||
+            CurrentAttacksPerSecond <= 0f)
+        {
             return;
+        }
 
-        Vector3 mouseScreenPos = Input.mousePosition;
-        mouseScreenPos.z = -mainCamera.transform.position.z;
+        // Serenity automatically targets everything.
+        if (TowerUtilities.Instance != null &&
+            TowerUtilities.Instance.IsSerenityActive)
+        {
+            tickTimer += Time.deltaTime;
 
-        Vector2 mouseWorldPos =
-            mainCamera.ScreenToWorldPoint(mouseScreenPos);
+            float serenityInterval = 1f / CurrentAttacksPerSecond;
 
-        UpdateAoeVisual(mouseWorldPos);
+            while (tickTimer >= serenityInterval)
+            {
+                tickTimer -= serenityInterval;
+                AttackAllTargets();
+            }
 
-        // Only activate the AOE while hovering over an enemy.
-        if (!IsCursorOnEnemy(mouseWorldPos))
+            return;
+        }
+
+        Vector2 mouseWorldPosition = GetMouseWorldPosition();
+
+        AttackableHealth target = GetHoveredEnemy(mouseWorldPosition);
+
+        if (target == null)
         {
             tickTimer = 0f;
             return;
@@ -69,78 +71,124 @@ public class SakeroCombat : MonoBehaviour
         if (tickTimer >= interval)
         {
             tickTimer -= interval;
-
-            DamageEnemiesInAoe(
-                mouseWorldPos,
-                CurrentAoeRadius,
-                CurrentDamage
-            );
+            ShootProjectile(target);
         }
     }
 
-    private bool IsCursorOnEnemy(Vector2 cursorPosition)
+    private Vector2 GetMouseWorldPosition()
+    {
+        Vector3 mousePosition = Input.mousePosition;
+        mousePosition.z = -mainCamera.transform.position.z;
+
+        return mainCamera.ScreenToWorldPoint(mousePosition);
+    }
+
+    private AttackableHealth GetHoveredEnemy(Vector2 mousePosition)
     {
         Collider2D hit = Physics2D.OverlapPoint(
-            cursorPosition,
+            mousePosition,
             enemyLayer
         );
 
-        return hit != null &&
-               hit.GetComponentInParent<EnemyHealth>() != null;
+        if (hit == null)
+            return null;
+
+        AttackableHealth target =
+            hit.GetComponentInParent<AttackableHealth>();
+
+        if (target == null || !target.IsAlive)
+            return null;
+
+        return target;
     }
 
-    private void UpdateAoeVisual(Vector2 center)
+    private void AttackAllTargets()
     {
-        if (aoeLineRenderer == null || circleSegments <= 0)
-            return;
+        var targets = AttackableTargetRegistry.Targets;
 
-        float angleStep = 360f / circleSegments;
+        float rangeSquared = serenityRange * serenityRange;
+        Vector2 origin = transform.position;
 
-        for (int i = 0; i < circleSegments; i++)
+        for (int i = targets.Count - 1; i >= 0; i--)
         {
-            float angle = i * angleStep * Mathf.Deg2Rad;
+            AttackableHealth target = targets[i];
 
-            Vector3 point = new Vector3(
-                center.x + Mathf.Cos(angle) * CurrentAoeRadius,
-                center.y + Mathf.Sin(angle) * CurrentAoeRadius,
-                0f
-            );
-
-            aoeLineRenderer.SetPosition(i, point);
-        }
-    }
-
-    private void DamageEnemiesInAoe(
-        Vector2 center,
-        float radius,
-        float damage)
-    {
-        EnemyHealth[] enemies = FindObjectsByType<EnemyHealth>(
-            FindObjectsSortMode.None
-        );
-
-        float radiusSquared = radius * radius;
-
-        foreach (EnemyHealth enemy in enemies)
-        {
-            if (enemy == null || !enemy.gameObject.activeInHierarchy)
+            if (target == null ||
+                !target.gameObject.activeInHierarchy ||
+                !target.IsAlive)
+            {
                 continue;
+            }
 
             Vector2 offset =
-                (Vector2)enemy.transform.position - center;
+                (Vector2)target.transform.position - origin;
 
-            if (offset.sqrMagnitude <= radiusSquared)
-                enemy.TakeDamage(damage);
+            if (offset.sqrMagnitude > rangeSquared)
+                continue;
+
+            ShootProjectile(target);
+        }
+    }
+    
+    private void ShootProjectile(AttackableHealth target)
+    {
+        if (projectilePrefab == null || target == null)
+            return;
+
+        Vector3 spawnPosition = muzzlePoint != null
+            ? muzzlePoint.position
+            : transform.position;
+
+        Vector2 direction =
+            (Vector2)(target.transform.position - spawnPosition);
+
+        if (direction.sqrMagnitude > 0f)
+        {
+            spawnPosition +=
+                (Vector3)(direction.normalized * projectileSpawnOffset);
+        }
+
+        GameObject projectileObject =
+            ObjectPoolManager.Instance != null
+                ? ObjectPoolManager.Instance.GetObject(
+                    projectilePrefab.gameObject,
+                    spawnPosition,
+                    Quaternion.identity
+                )
+                : Instantiate(
+                    projectilePrefab.gameObject,
+                    spawnPosition,
+                    Quaternion.identity
+                );
+
+        if (projectileObject == null)
+            return;
+
+        SakeroMagicProjectile projectile =
+            projectileObject.GetComponent<SakeroMagicProjectile>();
+
+        if (projectile != null)
+        {
+            projectile.Initialize(target, CurrentDamage);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "The projectile prefab is missing SakeroMagicProjectile."
+            );
+
+            if (ObjectPoolManager.Instance != null)
+                ObjectPoolManager.Instance.ReturnObject(projectileObject);
+            else
+                Destroy(projectileObject);
         }
     }
 
     public void ApplyUpgrade(
         float damageIncrease,
-        float attackSpeedIncrease,
-        float radiusIncrease)
+        float attackSpeedIncrease)
     {
         CurrentDamage += damageIncrease;
         CurrentAttacksPerSecond += attackSpeedIncrease;
-        CurrentAoeRadius += radiusIncrease;
     }
 }

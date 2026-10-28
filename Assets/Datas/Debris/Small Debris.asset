@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 978b66a1973a8f34a8c8a988657daf14, type: 3}
+  m_Name: Small Debris
+  m_EditorClassIdentifier: 
+  size: 0
+  prefab: {fileID: 9085742504743057461, guid: ec23ce25fa1652947a0d1a83a8105baf, type: 3}
+  sprite: {fileID: 0}
+  maxHealth: 30
+  minFallSpeed: 1.1
+  maxFallSpeed: 1.5
+  baseExp: 2
+  baseBlocks: 2
+  upgradePointChance: 0.01

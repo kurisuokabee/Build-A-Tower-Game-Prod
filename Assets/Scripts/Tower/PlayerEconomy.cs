@@ -20,6 +20,8 @@ public class PlayerEconomy : MonoBehaviour
     public int CurrentLevelExp { get; private set; }
     public int ExpToNextLevel { get; private set; }
 
+    public int UpgradePoints { get; private set; }
+    
     public event Action OnResourcesChanged;
 
     private void Awake()
@@ -96,5 +98,12 @@ public class PlayerEconomy : MonoBehaviour
         OnResourcesChanged?.Invoke();
 
         return true;
+    }
+
+    public void AddUpgradePoints(int amount)
+    {
+        if (amount <= 0) return;
+        UpgradePoints += amount;
+        OnResourcesChanged?.Invoke();
     }
 }

@@ -81,34 +81,44 @@ public class TowerArrow : TowerSection
         upgradeTree = GetComponent<TowerSectionUpgradeTree>();
     }
 
-    protected override List<Enemy> FindTargets()
+    protected override IReadOnlyList<AttackableHealth> FindTargets()
     {
-        return FindNearestEnemies(1);
+        AttackableHealth target = FindNearestTarget();
+
+        if (target == null)
+            return System.Array.Empty<AttackableHealth>();
+
+        return new AttackableHealth[] { target };
     }
 
-    protected override void Attack(List<Enemy> targets)
+    protected override void Attack(IReadOnlyList<AttackableHealth> targets)
     {
         if (firePoint == null || arrowPrefab == null ||
             targets == null || targets.Count == 0 || targets[0] == null)
             return;
 
-        Enemy target = targets[0];
+        if (ObjectPoolManager.Instance == null)
+        {
+            Debug.LogError("ObjectPoolManager is missing from the scene.");
+            return;
+        }
+
+        AttackableHealth target = targets[0];
         int arrowCount = TotalProjectileCount;
 
-        float damagePerArrow = Damage;
+        float damagePerArrow = EffectiveDamage;
 
-        // Extra arrows deal reduced damage.
         if (arrowCount > projectileCount)
             damagePerArrow *= extraArrowDamageMultiplier;
 
         if (IsBarrage)
         {
             int totalArrows = arrowCount + extraArrowsPerUpgrade;
-
-            // Barrage arrows also deal reduced damage.
             damagePerArrow *= barrageDamageMultiplier;
 
-            StartCoroutine(FireBarrage(target, totalArrows, damagePerArrow));
+            StartCoroutine(
+                FireBarrage(target, totalArrows, damagePerArrow)
+            );
         }
         else
         {
@@ -117,17 +127,21 @@ public class TowerArrow : TowerSection
     }
 
     private IEnumerator FireBarrage(
-        Enemy target,
+        AttackableHealth target,
         int totalArrows,
         float damagePerArrow)
     {
         for (int i = 0; i < totalArrows; i++)
         {
-            if (target == null || !target.gameObject.activeInHierarchy)
+            if (target == null || !target.gameObject.activeInHierarchy ||
+                !target.IsAlive)
                 yield break;
 
-            float angleOffset = GetAngleOffset(i, totalArrows);
-            FireArrow(target, damagePerArrow, angleOffset);
+            FireArrow(
+                target,
+                damagePerArrow,
+                GetAngleOffset(i, totalArrows)
+            );
 
             if (i < totalArrows - 1)
                 yield return new WaitForSeconds(barrageShotDelay);
@@ -135,14 +149,17 @@ public class TowerArrow : TowerSection
     }
 
     private void FireSpreadArrows(
-        Enemy target,
+        AttackableHealth target,
         int count,
         float damagePerArrow)
     {
         for (int i = 0; i < count; i++)
         {
-            float angleOffset = GetAngleOffset(i, count);
-            FireArrow(target, damagePerArrow, angleOffset);
+            FireArrow(
+                target,
+                damagePerArrow,
+                GetAngleOffset(i, count)
+            );
         }
     }
 
@@ -152,18 +169,32 @@ public class TowerArrow : TowerSection
     }
 
     private void FireArrow(
-        Enemy target,
+        AttackableHealth target,
         float damage,
         float angleOffset = 0f)
     {
-        if (target == null || !target.gameObject.activeInHierarchy)
+        if (target == null || !target.gameObject.activeInHierarchy ||
+            !target.IsAlive)
             return;
 
-        ArrowProjectile projectile = Instantiate(
-            arrowPrefab,
+        GameObject arrowObject = ObjectPoolManager.Instance.GetObject(
+            arrowPrefab.gameObject,
             firePoint.position,
             Quaternion.identity
         );
+
+        if (arrowObject == null)
+            return;
+
+        ArrowProjectile projectile =
+            arrowObject.GetComponent<ArrowProjectile>();
+
+        if (projectile == null)
+        {
+            Debug.LogError("Arrow prefab is missing ArrowProjectile.");
+            ObjectPoolManager.Instance.ReturnObject(arrowObject);
+            return;
+        }
 
         projectile.Initialize(
             target,
