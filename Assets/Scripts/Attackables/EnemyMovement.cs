@@ -6,20 +6,30 @@ public class EnemyMovement : MonoBehaviour
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float attackRange = 1f;
 
-   
     private TowerSection targetSection;
+    private AttackableHealth attackableHealth;
 
     public bool IsInAttackRange { get; private set; }
 
+    private void Awake()
+    {
+        attackableHealth = GetComponent<AttackableHealth>();
+    }
+
     private void Update()
-    {   
+    {
+        if (attackableHealth == null)
+            return;
+
+        if (attackableHealth.IsStunned)
+            return;
+
         if (targetSection == null)
             return;
 
         MoveToTarget();
     }
 
-    
     private void MoveToTarget()
     {
         if (targetSection == null)
@@ -42,12 +52,10 @@ public class EnemyMovement : MonoBehaviour
         );
     }
 
-
     public void Initialize(TowerSection target, float range)
     {
         targetSection = target;
         attackRange = range;
+        IsInAttackRange = false;
     }
-
-       
 }

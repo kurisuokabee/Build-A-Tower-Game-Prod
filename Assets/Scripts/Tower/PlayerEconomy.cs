@@ -8,6 +8,7 @@ public class PlayerEconomy : MonoBehaviour
     [Header("Starting Resources")]
     [SerializeField] private int startingBlocks = 0;
     [SerializeField] private int startingExp = 0;
+    [SerializeField] private int startingUpgradePoints = 0;
 
     [Header("Leveling")]
     [SerializeField] private int baseExpRequired = 100;
@@ -36,6 +37,7 @@ public class PlayerEconomy : MonoBehaviour
 
         Blocks = startingBlocks;
         Exp = startingExp;
+        UpgradePoints = startingUpgradePoints;
 
         UpdateExpRequirement();
     }
@@ -105,5 +107,16 @@ public class PlayerEconomy : MonoBehaviour
         if (amount <= 0) return;
         UpgradePoints += amount;
         OnResourcesChanged?.Invoke();
+    }
+
+    public bool SpendUpgradePoints(int amount)
+    {
+        if (amount < 0 || UpgradePoints < amount)
+            return false;
+
+        UpgradePoints -= amount;
+        OnResourcesChanged?.Invoke();
+
+        return true;
     }
 }

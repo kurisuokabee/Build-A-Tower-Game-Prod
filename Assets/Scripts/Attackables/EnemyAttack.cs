@@ -20,25 +20,37 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private float projectileSpeed = 6f;
 
     private TowerSection target;
+    private AttackableHealth attackableHealth;
     private float attackTimer;
 
     public AttackType CurrentAttackType => attackType;
-    
-    public void Initialize(AttackType type, TowerSection targetSection, float range)
+
+    private void Awake()
+    {
+        attackableHealth = GetComponent<AttackableHealth>();
+    }
+
+    public void Initialize(
+        AttackType type,
+        TowerSection targetSection,
+        float range)
     {
         attackType = type;
         target = targetSection;
         attackTimer = 0f;
-
         attackRange = range;
     }
 
     private void Update()
     {
+        if (attackableHealth != null && attackableHealth.IsStunned)
+            return;
+
         if (target == null || !target.gameObject.activeInHierarchy)
             return;
 
-        Vector3 difference = target.transform.position - transform.position;
+        Vector3 difference =
+            target.transform.position - transform.position;
 
         if (difference.sqrMagnitude > attackRange * attackRange)
             return;

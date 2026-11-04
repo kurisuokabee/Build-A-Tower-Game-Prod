@@ -29,6 +29,17 @@ public abstract class TowerSection : MonoBehaviour
         PlayerEconomy.Instance.Blocks >= BlockCost;
 
     private float attackTimer;
+    private bool isTriggeredAttack;
+
+    private int temporaryLevelBonus;
+    private float temporaryDamageBonus;
+    private float temporaryAttackSpeedBonus;
+
+    protected bool IsTriggeredAttack => isTriggeredAttack;
+
+    public int TemporaryLevelBonus => temporaryLevelBonus;
+    protected virtual bool AttackWithoutTargets => false;
+    protected virtual float AttackSpeedMultiplier => 1f;
 
     protected virtual void Awake()
     {
@@ -57,11 +68,33 @@ public abstract class TowerSection : MonoBehaviour
 
         IReadOnlyList<AttackableHealth> targets = FindTargets();
 
-        if (targets == null || targets.Count == 0)
+        if ((targets == null || targets.Count == 0) &&
+            !AttackWithoutTargets)
+        {
             return;
+        }
 
         Attack(targets);
         attackTimer = 1f / EffectiveAttacksPerSecond;
+    }
+
+    public bool TriggerAttackImmediately()
+    {
+        if (!isActiveAndEnabled)
+            return false;
+
+        isTriggeredAttack = true;
+
+        try
+        {
+            Attack(FindTargets());
+        }
+        finally
+        {
+            isTriggeredAttack = false;
+        }
+
+        return true;
     }
 
     protected IReadOnlyList<AttackableHealth> FindNearestTargets(int count)
@@ -106,14 +139,74 @@ public abstract class TowerSection : MonoBehaviour
         ApplyUpgrade();
     }
 
+    // Permanent upgrade.
+    public void ApplyUpgrade()
+    {
+        RemoveTemporaryBonus();
+
+        ApplyUpgradeStats();
+
+        ApplyTemporaryBonus();
+    }
+
+    // Temporary upgrade level from Upgrading Spear.
+    public void SetTemporaryLevelBonus(int levels)
+    {
+        RemoveTemporaryBonus();
+
+        temporaryLevelBonus = Mathf.Max(0, levels);
+
+        ApplyTemporaryBonus();
+    }
+
+    private void ApplyTemporaryBonus()
+    {
+        if (temporaryLevelBonus <= 0)
+            return;
+
+        float originalDamage = Damage;
+        float originalAttackSpeed = AttacksPerSecond;
+
+        // Measure what one normal upgrade adds.
+        ApplyUpgradeStats();
+
+        float damagePerLevel = Damage - originalDamage;
+        float attackSpeedPerLevel =
+            AttacksPerSecond - originalAttackSpeed;
+
+        // Restore permanent stats.
+        Damage = originalDamage;
+        AttacksPerSecond = originalAttackSpeed;
+
+        // Apply the temporary equivalent.
+        temporaryDamageBonus =
+            damagePerLevel * temporaryLevelBonus;
+
+        temporaryAttackSpeedBonus =
+            attackSpeedPerLevel * temporaryLevelBonus;
+
+        Damage += temporaryDamageBonus;
+        AttacksPerSecond += temporaryAttackSpeedBonus;
+    }
+
+    private void RemoveTemporaryBonus()
+    {
+        Damage -= temporaryDamageBonus;
+        AttacksPerSecond -= temporaryAttackSpeedBonus;
+
+        temporaryDamageBonus = 0f;
+        temporaryAttackSpeedBonus = 0f;
+    }
+
     public float EffectiveDamage
     {
         get
         {
-            float multiplier = TowerUtilities.Instance != null &&
-                            TowerUtilities.Instance.IsRageActive
-                ? TowerUtilities.Instance.RageMultiplier
-                : 1f;
+            float multiplier =
+                TowerUtilities.Instance != null &&
+                TowerUtilities.Instance.IsRageActive
+                    ? TowerUtilities.Instance.RageMultiplier
+                    : 1f;
 
             return Damage * multiplier;
         }
@@ -123,12 +216,15 @@ public abstract class TowerSection : MonoBehaviour
     {
         get
         {
-            float multiplier = TowerUtilities.Instance != null &&
-                            TowerUtilities.Instance.IsRageActive
-                ? TowerUtilities.Instance.RageMultiplier
-                : 1f;
+            float rageMultiplier =
+                TowerUtilities.Instance != null &&
+                TowerUtilities.Instance.IsRageActive
+                    ? TowerUtilities.Instance.RageMultiplier
+                    : 1f;
 
-            return AttacksPerSecond * multiplier;
+            return AttacksPerSecond *
+                rageMultiplier *
+                AttackSpeedMultiplier;
         }
     }
 
@@ -138,5 +234,5 @@ public abstract class TowerSection : MonoBehaviour
         IReadOnlyList<AttackableHealth> targets
     );
 
-    public abstract void ApplyUpgrade();
+    protected abstract void ApplyUpgradeStats();
 }

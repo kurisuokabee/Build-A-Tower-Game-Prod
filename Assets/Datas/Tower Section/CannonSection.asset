@@ -18,5 +18,5 @@ MonoBehaviour:
   requiredLevel: 1
   towerUpgradeID: 2
   attackRange: 10
-  attacksPerSecond: 1
+  attacksPerSecond: 0.2
   damage: 10

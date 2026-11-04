@@ -42,11 +42,11 @@ GameObject:
   - component: {fileID: 3625021212594386761}
   - component: {fileID: 1331889849164720198}
   - component: {fileID: -647035547220281149}
-  - component: {fileID: 7572231841422173812}
   - component: {fileID: -2561031551167538117}
   - component: {fileID: 3901456262554054492}
   - component: {fileID: 449675156613812348}
   - component: {fileID: 318151935516692494}
+  - component: {fileID: 1412483846635227533}
   m_Layer: 0
   m_Name: Arrow Section
   m_TagString: Untagged
@@ -141,27 +141,6 @@ MonoBehaviour:
   height: 1
   width: 1
   sectionData: {fileID: 11400000, guid: 82604555845f16546a1b850d6ee4772e, type: 2}
-  enemyFinder: {fileID: 7572231841422173812}
-  firePoint: {fileID: 6495855460568575031}
-  arrowPrefab: {fileID: 4657670528479179626, guid: efbe09dda312b0440bed435d7f99dd84, type: 3}
-  projectileCount: 1
-  angleGap: 15
-  barrageShotDelay: 0.075
-  extraArrowsPerUpgrade: 2
-  extraArrowDamageMultiplier: 0.5
-  barrageDamageMultiplier: 0.5
---- !u!114 &7572231841422173812
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5696568791513838392}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82b2ec09a41bec449b64e75b05d0a07d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &-2561031551167538117
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -178,21 +157,27 @@ MonoBehaviour:
   - choice: 1
     upgradeName: Piercing
     description: 
+    upgradePointCost: 1
   - choice: 2
     upgradeName: Multi-Shot I
     description: 
+    upgradePointCost: 1
   - choice: 3
     upgradeName: Returning
     description: 
+    upgradePointCost: 3
   - choice: 5
     upgradeName: Homing
     description: 
+    upgradePointCost: 5
   - choice: 4
+    upgradeName: Follow
+    description: 
+    upgradePointCost: 2
+  - choice: 6
     upgradeName: Barrage
     description: 
-  - choice: 6
-    upgradeName: Multi-Shot II
-    description: 
+    upgradePointCost: 3
   selectedBranch: 0
   selectedSpecialization: 0
 --- !u!114 &3901456262554054492
@@ -271,6 +256,26 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &1412483846635227533
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5696568791513838392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a80362c93f9321e4e88cdc3007d8994c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firePoint: {fileID: 6495855460568575031}
+  arrowPrefab: {fileID: 4657670528479179626, guid: efbe09dda312b0440bed435d7f99dd84, type: 3}
+  projectileCount: 1
+  angleGap: 15
+  barrageShotDelay: 0.15
+  extraArrowsPerUpgrade: 2
+  extraArrowDamageMultiplier: 0.5
+  barrageDamageMultiplier: 0.5
 --- !u!1 &6472196244676876851
 GameObject:
   m_ObjectHideFlags: 0

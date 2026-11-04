@@ -17,6 +17,6 @@ MonoBehaviour:
   cost: 75
   requiredLevel: 1
   towerUpgradeID: 0
-  attackRange: 10
+  attackRange: 20
   attacksPerSecond: 0.2
   damage: 10

@@ -2,22 +2,29 @@ using UnityEngine;
 
 public class DebrisMovement : MonoBehaviour
 {
-    private float fallSpeed = 3f;
-    private PooledObject pooledObject;
+    [SerializeField] private float fallSpeed = 3f;
 
-    void Awake()
+    private PooledObject pooledObject;
+    private AttackableHealth attackableHealth;
+
+    private void Awake()
     {
         pooledObject = GetComponent<PooledObject>();
+        attackableHealth = GetComponent<AttackableHealth>();
     }
+
     public void Initialize(float speed)
     {
         fallSpeed = speed;
-        
     }
 
     private void Update()
     {
-        transform.position += fallSpeed * Time.deltaTime * Vector3.down;
+        if (attackableHealth != null && attackableHealth.IsStunned)
+            return;
+
+        transform.position +=
+            fallSpeed * Time.deltaTime * Vector3.down;
 
         if (transform.position.y < -9f)
         {

@@ -1,32 +1,68 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 
 public class TowerFlail : TowerSection
 {
-    [Header("Flail References")]
-    [SerializeField] private Transform flailPivot;
-    [SerializeField] private Transform flailBall;
+    private TowerSectionUpgradeTree upgradeTree;
+    private FlailWeaponController weaponController;
 
-    [Header("Flail Settings")]
-    [SerializeField] private float rotationSpeed = 180f;
-    [SerializeField] private float hitRadius = 0.5f;
+    private bool IsMultiFlail =>
+        upgradeTree != null &&
+        upgradeTree.SelectedBranch ==
+        TowerSectionUpgradeTree.UpgradeChoice.Left;
 
-    private float currentAngle;
-    private float previousAngle;
+    private bool IsCharging =>
+        IsMultiFlail &&
+        upgradeTree.SelectedSpecialization ==
+        TowerSectionUpgradeTree.UpgradeChoice.Left1;
 
-    private readonly HashSet<AttackableHealth> hitTargets = new();
-    private readonly List<AttackableHealth> targetsToRemove = new();
+    private bool IsRoulette =>
+        IsMultiFlail &&
+        upgradeTree.SelectedSpecialization ==
+        TowerSectionUpgradeTree.UpgradeChoice.Left2;
+
+    private bool IsSword =>
+        upgradeTree != null &&
+        upgradeTree.SelectedBranch ==
+        TowerSectionUpgradeTree.UpgradeChoice.Right;
+
+    private bool IsMultiSword =>
+        IsSword &&
+        upgradeTree.SelectedSpecialization ==
+        TowerSectionUpgradeTree.UpgradeChoice.Right1;
+
+    public bool GrantsAlliance =>
+        IsSword &&
+        upgradeTree.SelectedSpecialization ==
+        TowerSectionUpgradeTree.UpgradeChoice.Right2;
+
+    private bool HasSecondWeapon =>
+        IsMultiFlail || IsMultiSword;
 
     protected override void Awake()
     {
         base.Awake();
 
-        if (flailPivot == null)
-            Debug.LogWarning("TowerFlail is missing its FlailPivot.", this);
+        upgradeTree = GetComponent<TowerSectionUpgradeTree>();
+        weaponController = GetComponent<FlailWeaponController>();
 
-        if (flailBall == null)
-            Debug.LogWarning("TowerFlail is missing its FlailBall.", this);
+        if (weaponController == null)
+        {
+            Debug.LogError(
+                "TowerFlail requires FlailWeaponController.",
+                this
+            );
+        }
+    }
+
+    protected override void Start()
+    {
+        base.Start();
+    }
+
+    private void OnEnable()
+    {
+        TowerBuilding.Instance?.RefreshTemporaryUpgrades();
     }
 
     protected override IReadOnlyList<AttackableHealth> FindTargets()
@@ -34,111 +70,28 @@ public class TowerFlail : TowerSection
         return AttackableTargetRegistry.Targets;
     }
 
-    
     protected override void Update()
     {
-        if (flailPivot == null || flailBall == null)
+        if (weaponController == null)
             return;
 
-        previousAngle = currentAngle;
-
-        float rotationThisFrame = rotationSpeed * Time.deltaTime;
-        currentAngle = (currentAngle + rotationThisFrame) % 360f;
-
-        flailPivot.Rotate(0f, 0f, rotationThisFrame);
-
-        if (currentAngle < previousAngle)
-            hitTargets.Clear();
-
-        DamageTargetsAlongPath(previousAngle, rotationThisFrame);
-    }
-
-    
-    private void DamageTargetsAlongPath(
-        float startAngle,
-        float rotationThisFrame)
-    {
-        IReadOnlyList<AttackableHealth> targets =
-            AttackableTargetRegistry.Targets;
-
-        Vector2 center = flailPivot.position;
-        float radiusSquared = hitRadius * hitRadius;
-
-        float flailLength = Vector2.Distance(
-            center,
-            flailBall.position
+        weaponController.Tick(
+            IsCharging,
+            HasSecondWeapon,
+            IsSword,
+            IsRoulette,
+            EffectiveDamage
         );
-
-        // Sample the arc frequently enough to reduce missed hits.
-        float arcLength = Mathf.Abs(rotationThisFrame * Mathf.Deg2Rad)
-            * flailLength;
-
-        int steps = Mathf.Max(
-            1,
-            Mathf.CeilToInt(arcLength / Mathf.Max(hitRadius, 0.05f))
-        );
-
-        for (int i = 0; i < targets.Count; i++)
-        {
-            AttackableHealth target = targets[i];
-
-            if (target == null ||
-                !target.isActiveAndEnabled ||
-                !target.IsAlive ||
-                hitTargets.Contains(target))
-            {
-                continue;
-            }
-
-            Vector2 targetPosition = target.transform.position;
-            bool hit = false;
-
-            for (int step = 0; step <= steps; step++)
-            {
-                float t = step / (float)steps;
-                float angle = startAngle + rotationThisFrame * t;
-
-                float radians = angle * Mathf.Deg2Rad;
-
-                Vector2 samplePosition = center + new Vector2(
-                    Mathf.Cos(radians),
-                    Mathf.Sin(radians)
-                ) * flailLength;
-
-                if ((targetPosition - samplePosition).sqrMagnitude
-                    <= radiusSquared)
-                {
-                    hit = true;
-                    break;
-                }
-            }
-
-            if (hit)
-            {
-                target.TakeDamage(EffectiveDamage);
-                hitTargets.Add(target);
-            }
-        }
     }
-
 
     protected override void Attack(
         IReadOnlyList<AttackableHealth> targets)
     {
+        // Contact damage is handled by FlailWeaponController.
     }
 
-    public override void ApplyUpgrade()
+    protected override void ApplyUpgradeStats()
     {
         Damage += 1f;
-    }
-
-    private void OnDisable()
-    {
-        hitTargets.Clear();
-        currentAngle = 0f;
-        previousAngle = 0f;
-
-        if (flailPivot != null)
-            flailPivot.localRotation = Quaternion.identity;
     }
 }

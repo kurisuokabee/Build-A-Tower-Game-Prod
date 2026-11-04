@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,8 +20,13 @@ public class TowerSectionUpgradeTree : MonoBehaviour
     public class UpgradeInfo
     {
         public UpgradeChoice choice;
+
+        [Header("Upgrade Information")]
         public string upgradeName;
         [TextArea] public string description;
+
+        [Header("Upgrade Cost")]
+        [Min(0)] public int upgradePointCost = 1;
     }
 
     [Header("Upgrade Names")]
@@ -42,11 +48,17 @@ public class TowerSectionUpgradeTree : MonoBehaviour
     public UpgradeChoice SelectedBranch => selectedBranch;
     public UpgradeChoice SelectedSpecialization => selectedSpecialization;
 
+    private void OnEnable()
+    {
+        TowerBuilding.Instance?.RefreshTemporaryUpgrades();
+    }
+
     public string GetUpgradeName(UpgradeChoice choice)
     {
         UpgradeInfo info = upgrades.Find(x => x.choice == choice);
 
-        return info != null && !string.IsNullOrWhiteSpace(info.upgradeName)
+        return info != null &&
+               !string.IsNullOrWhiteSpace(info.upgradeName)
             ? info.upgradeName
             : choice.ToString();
     }
@@ -56,6 +68,23 @@ public class TowerSectionUpgradeTree : MonoBehaviour
         UpgradeInfo info = upgrades.Find(x => x.choice == choice);
 
         return info != null ? info.description : "";
+    }
+
+    public int GetUpgradeCost(UpgradeChoice choice)
+    {
+        UpgradeInfo info = upgrades.Find(x => x.choice == choice);
+
+        return info != null ? info.upgradePointCost : 0;
+    }
+
+    public bool CanAffordUpgrade(UpgradeChoice choice)
+    {
+        PlayerEconomy economy = PlayerEconomy.Instance;
+
+        if (economy == null)
+            return false;
+
+        return economy.UpgradePoints >= GetUpgradeCost(choice);
     }
 
     public List<UpgradeChoice> GetAvailableChoices()
@@ -92,6 +121,30 @@ public class TowerSectionUpgradeTree : MonoBehaviour
                 $"[{name}] Cannot choose {choice}. " +
                 "This upgrade is unavailable or already chosen."
             );
+
+            return false;
+        }
+
+        int cost = GetUpgradeCost(choice);
+
+        PlayerEconomy economy = PlayerEconomy.Instance;
+
+        if (economy == null)
+        {
+            Debug.LogWarning(
+                $"[{name}] Cannot purchase upgrade. PlayerEconomy is missing."
+            );
+
+            return false;
+        }
+
+        if (!economy.SpendUpgradePoints(cost))
+        {
+            Debug.Log(
+                $"[{name}] Not enough Upgrade Points for {GetUpgradeName(choice)}. " +
+                $"Required: {cost}, Available: {economy.UpgradePoints}."
+            );
+
             return false;
         }
 
@@ -103,6 +156,13 @@ public class TowerSectionUpgradeTree : MonoBehaviour
         {
             selectedSpecialization = choice;
         }
+
+        TowerBuilding.Instance?.RefreshTemporaryUpgrades();
+
+        Debug.Log(
+            $"[{name}] Purchased {GetUpgradeName(choice)} " +
+            $"for {cost} Upgrade Points."
+        );
 
         return true;
     }

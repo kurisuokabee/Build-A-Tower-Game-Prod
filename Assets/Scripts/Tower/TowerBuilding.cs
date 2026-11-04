@@ -36,6 +36,7 @@ public class TowerBuilding : MonoBehaviour
     private void Start()
     {
         RebuildTower();
+        RefreshTemporaryUpgrades();
     }
 
     public int GetCurrentBuildCost(TowerSection section)
@@ -90,6 +91,7 @@ public class TowerBuilding : MonoBehaviour
         successfulBuilds++;
 
         RebuildTower();
+        RefreshTemporaryUpgrades();
 
         return true;
     }
@@ -236,6 +238,7 @@ public class TowerBuilding : MonoBehaviour
         sections[secondIndex] = first;
 
         RebuildTower();
+        RefreshTemporaryUpgrades();
     }
 
     public bool HasSection(TowerUpgradeID upgradeID)
@@ -252,4 +255,107 @@ public class TowerBuilding : MonoBehaviour
 
         return false;
     }
+
+    public void TriggerAdjacentSections(TowerSection source)
+    {
+        if (source == null)
+            return;
+
+        int index = sections.IndexOf(source);
+
+        if (index < 0)
+            return;
+
+        // Section directly below.
+        if (index > 0)
+        {
+            TowerSection below = sections[index - 1];
+
+            if (below != null)
+                below.TriggerAttackImmediately();
+        }
+
+        // Section directly above.
+        if (index < sections.Count - 1)
+        {
+            TowerSection above = sections[index + 1];
+
+            if (above != null)
+                above.TriggerAttackImmediately();
+        }
+    }
+
+    
+    
+    public void RefreshTemporaryUpgrades()
+    {
+        int[] bonuses = new int[sections.Count];
+
+        for (int i = 0; i < sections.Count; i++)
+        {
+            TowerSection section = sections[i];
+
+            if (section == null || !section.isActiveAndEnabled)
+                continue;
+
+            // Upgrading Spear behavior.
+            if (section is TowerSpear spear &&
+                spear.GrantsAdjacentUpgrade)
+            {
+                if (i > 0 &&
+                    sections[i - 1] != null &&
+                    sections[i - 1].isActiveAndEnabled)
+                {
+                    bonuses[i - 1]++;
+                }
+
+                if (i < sections.Count - 1 &&
+                    sections[i + 1] != null &&
+                    sections[i + 1].isActiveAndEnabled)
+                {
+                    bonuses[i + 1]++;
+                }
+            }
+
+            // Alliance behavior.
+            if (section is TowerFlail flail &&
+                flail.GrantsAlliance &&
+                i > 0 &&
+                i < sections.Count - 1)
+            {
+                TowerSection below = sections[i - 1];
+                TowerSection above = sections[i + 1];
+
+                if (IsAllianceNeighbor(below) &&
+                    IsAllianceNeighbor(above))
+                {
+                    bonuses[i] += 2;
+                    bonuses[i - 1] += 2;
+                    bonuses[i + 1] += 2;
+                }
+            }
+        }
+
+        for (int i = 0; i < sections.Count; i++)
+        {
+            if (sections[i] != null)
+                sections[i].SetTemporaryLevelBonus(bonuses[i]);
+        }
+    }
+
+    private bool IsAllianceNeighbor(TowerSection section)
+    {
+        if (section == null || !section.isActiveAndEnabled ||
+            section.Data == null)
+        {
+            return false;
+        }
+
+        TowerUpgradeID id = section.Data.towerUpgradeID;
+
+        return id == TowerUpgradeID.Spear ||
+            id == TowerUpgradeID.Flail;
+    }
+
+
 }

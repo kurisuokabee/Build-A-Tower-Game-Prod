@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TowerStarting : TowerSection
 {
-    public override void ApplyUpgrade()
+    protected override void ApplyUpgradeStats()
     {
         throw new System.NotImplementedException();
     }

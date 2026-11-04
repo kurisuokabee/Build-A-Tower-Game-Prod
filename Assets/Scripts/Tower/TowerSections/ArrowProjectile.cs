@@ -47,13 +47,19 @@ public class ArrowProjectile : MonoBehaviour
     public void Initialize(
         AttackableHealth target,
         float damage,
-        bool piercing = false,
-        bool returning = false,
-        Transform returnPoint = null,
-        float angleOffset = 0f,
-        bool homing = false)
+        bool piercing,
+        bool returning,
+        Transform returnPoint,
+        Vector2 direction,
+        bool homing)
     {
-        if (target == null || !target.IsAlive)
+        if (direction.sqrMagnitude <= 0f)
+        {
+            ReturnToPool();
+            return;
+        }
+
+        if (homing && !IsTargetValid(target))
         {
             ReturnToPool();
             return;
@@ -79,26 +85,7 @@ public class ArrowProjectile : MonoBehaviour
 
         hitTargets.Clear();
 
-        Vector2 direction =
-            ((Vector2)target.transform.position - rb.position).normalized;
-
-        if (direction == Vector2.zero)
-            direction = Vector2.up;
-
-        direction = RotateDirection(direction, angleOffset);
-        SetDirection(direction);
-    }
-
-    private Vector2 RotateDirection(Vector2 direction, float angle)
-    {
-        float radians = angle * Mathf.Deg2Rad;
-        float sin = Mathf.Sin(radians);
-        float cos = Mathf.Cos(radians);
-
-        return new Vector2(
-            direction.x * cos - direction.y * sin,
-            direction.x * sin + direction.y * cos
-        ).normalized;
+        SetDirection(direction.normalized);
     }
 
     private void Update()
@@ -128,9 +115,11 @@ public class ArrowProjectile : MonoBehaviour
         if (!initialized)
             return;
 
+        float deltaTime = Time.fixedDeltaTime;
+
         if (returningEnabled && !isReturning)
         {
-            outboundTimer += Time.fixedDeltaTime;
+            outboundTimer += deltaTime;
 
             if (outboundTimer >= outboundDuration)
                 BeginReturn();
@@ -144,12 +133,30 @@ public class ArrowProjectile : MonoBehaviour
 
         if (homingEnabled)
         {
+            // Keep the original target. Never switch to another entity.
             if (!IsTargetValid(target))
-                target = FindNearestTarget();
+            {
+                ReturnToPool();
+                return;
+            }
 
-            if (isHoming && IsTargetValid(target))
+            if (isHoming)
                 HomeTowardTarget();
+            else
+                UpdateProjectileSpeed();
         }
+        else
+        {
+            UpdateProjectileSpeed();
+        }
+    }
+
+    private void UpdateProjectileSpeed()
+    {
+        Vector2 direction = rb.linearVelocity.normalized;
+
+        if (direction != Vector2.zero)
+            SetDirection(direction);
     }
 
     private bool IsTargetValid(AttackableHealth attackable)
@@ -157,11 +164,6 @@ public class ArrowProjectile : MonoBehaviour
         return attackable != null &&
                attackable.isActiveAndEnabled &&
                attackable.IsAlive;
-    }
-
-    private AttackableHealth FindNearestTarget()
-    {
-        return AttackableTargetFinder.FindNearestTarget(rb.position);
     }
 
     private void HomeTowardTarget()
@@ -220,6 +222,16 @@ public class ArrowProjectile : MonoBehaviour
         rb.rotation = angle;
     }
 
+    private float GetActualDamage()
+    {
+        float finalDamage = damage;
+
+        if (isReturning)
+            finalDamage *= returnDamageMultiplier;
+
+        return finalDamage;
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         HandleHit(other);
@@ -233,15 +245,16 @@ public class ArrowProjectile : MonoBehaviour
         AttackableHealth attackable =
             hit.GetComponentInParent<AttackableHealth>();
 
+        // Homing arrows ignore every entity except their assigned target.
+        if (homingEnabled && attackable != target)
+            return;
+
         if (attackable != null)
         {
-            if (IsTargetValid(attackable) && hitTargets.Add(attackable))
+            if (IsTargetValid(attackable) &&
+                hitTargets.Add(attackable))
             {
-                float actualDamage = isReturning
-                    ? damage * returnDamageMultiplier
-                    : damage;
-
-                attackable.TakeDamage(actualDamage);
+                attackable.TakeDamage(GetActualDamage());
             }
 
             if (!piercing)
@@ -249,6 +262,10 @@ public class ArrowProjectile : MonoBehaviour
 
             return;
         }
+
+        // Homing arrows ignore debris as well.
+        if (homingEnabled)
+            return;
 
         bool isDebris =
             hit.CompareTag("Debris") ||
