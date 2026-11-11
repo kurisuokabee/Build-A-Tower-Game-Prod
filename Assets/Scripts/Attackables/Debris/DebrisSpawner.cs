@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,8 +9,14 @@ public class DebrisSpawner : MonoBehaviour
     [Header("Spawn Areas")]
     [SerializeField] private SpawnArea[] spawnAreas;
 
-    [Header("Spawn Settings")]
-    [SerializeField, Min(0.1f)] private float spawnInterval = 1.5f;
+    [Header("Spawn Difficulty")]
+    [SerializeField, Min(0.1f)] private float startingSpawnInterval = 0.5f;
+    [SerializeField, Min(0.1f)] private float minimumSpawnInterval = 0.2f;
+    [SerializeField] private int levelForMaximumSpawnRate = 15;
+
+    [Header("Debris Health Scaling")]
+    [SerializeField, Min(0f)] private float healthIncreasePerLevel = 0.1f;
+    [SerializeField, Min(0f)] private float healthIncreasePerSection = 0.05f;
 
     [Header("Initial Debris")]
     [SerializeField, Min(0)] private int initialDebrisCount = 10;
@@ -23,8 +28,15 @@ public class DebrisSpawner : MonoBehaviour
     [SerializeField] private float mediumChance = 25f;
     [SerializeField] private float largeChance = 5f;
 
+    [Header("Size Difficulty Scaling")]
+    [SerializeField] private int levelsPerAdjustment = 5;
+    [SerializeField] private float smallDecreasePerAdjustment = 5f;
+    [SerializeField] private float mediumIncreasePerAdjustment = 3f;
+    [SerializeField] private float largeIncreasePerAdjustment = 2f;
+
     private readonly List<DebrisData> availableDebris = new();
 
+    private bool isSpawningEnabled = true;
     private float spawnTimer;
 
     private void Awake()
@@ -53,13 +65,63 @@ public class DebrisSpawner : MonoBehaviour
 
     private void Update()
     {
+        if (!isSpawningEnabled)
+            return;
+
         spawnTimer += Time.deltaTime;
 
-        if (spawnTimer >= spawnInterval)
+        float currentInterval = GetCurrentSpawnInterval();
+
+        if (spawnTimer >= currentInterval)
         {
-            spawnTimer -= spawnInterval;
+            spawnTimer -= currentInterval;
             SpawnDebris();
         }
+    }
+
+    private int GetPlayerLevel()
+    {
+        return PlayerEconomy.Instance != null
+            ? PlayerEconomy.Instance.Level
+            : 1;
+    }
+
+    private int GetTowerSectionCount()
+    {
+        return TowerBuilding.Instance != null
+            ? TowerBuilding.Instance.Sections.Count
+            : 0;
+    }
+
+    private float GetCurrentSpawnInterval()
+    {
+        int level = GetPlayerLevel();
+
+        float progress = Mathf.InverseLerp(
+            1,
+            Mathf.Max(1, levelForMaximumSpawnRate),
+            level
+        );
+
+        return Mathf.Lerp(
+            startingSpawnInterval,
+            minimumSpawnInterval,
+            progress
+        );
+    }
+
+    private float GetDebrisHealthMultiplier()
+    {
+        int level = GetPlayerLevel();
+        int sections = GetTowerSectionCount();
+
+        float levelMultiplier =
+            1f + Mathf.Max(0, level - 1) * healthIncreasePerLevel;
+
+        float sectionMultiplier =
+            1f + sections * healthIncreasePerSection;
+
+        return levelMultiplier * sectionMultiplier;
     }
 
     private void CacheAvailableDebris()
@@ -140,6 +202,11 @@ public class DebrisSpawner : MonoBehaviour
         }
     }
 
+    public void RespawnInitialDebris()
+    {
+        SpawnInitialDebris();
+    }
+
     private void SpawnDebris()
     {
         SpawnArea area = GetRandomSpawnArea();
@@ -170,7 +237,7 @@ public class DebrisSpawner : MonoBehaviour
 
         if (setup != null)
         {
-            setup.Initialize(data);
+            setup.Initialize(data, GetDebrisHealthMultiplier());
         }
         else
         {
@@ -183,13 +250,16 @@ public class DebrisSpawner : MonoBehaviour
 
     private DebrisData ChooseDebrisData()
     {
-        if (availableDebris.Count == 0)
-            return null;
+        GetCurrentSizeChances(
+            out float currentSmallChance,
+            out float currentMediumChance,
+            out float currentLargeChance
+        );
 
         float totalWeight =
-            Mathf.Max(0f, smallChance) +
-            Mathf.Max(0f, mediumChance) +
-            Mathf.Max(0f, largeChance);
+            currentSmallChance +
+            currentMediumChance +
+            currentLargeChance;
 
         if (totalWeight <= 0f)
         {
@@ -202,13 +272,11 @@ public class DebrisSpawner : MonoBehaviour
 
         DebrisData.DebrisSize targetSize;
 
-        if (roll < Mathf.Max(0f, smallChance))
+        if (roll < currentSmallChance)
         {
             targetSize = DebrisData.DebrisSize.Small;
         }
-        else if (roll <
-                 Mathf.Max(0f, smallChance) +
-                 Mathf.Max(0f, mediumChance))
+        else if (roll < currentSmallChance + currentMediumChance)
         {
             targetSize = DebrisData.DebrisSize.Medium;
         }
@@ -234,5 +302,54 @@ public class DebrisSpawner : MonoBehaviour
         return selected != null
             ? selected
             : availableDebris[Random.Range(0, availableDebris.Count)];
+    }
+
+    public void SetSpawningEnabled(bool enabled)
+    {
+        isSpawningEnabled = enabled;
+    }
+
+    public void ClearAllDebris()
+    {
+        Debris[] allDebris =
+            FindObjectsByType<Debris>(FindObjectsSortMode.None);
+
+        foreach (var d in allDebris)
+        {
+            if (d != null && d.gameObject.activeInHierarchy)
+            {
+                PooledObject pooled = d.GetComponent<PooledObject>();
+
+                if (pooled != null)
+                    pooled.ReturnToPool();
+                else
+                    ObjectPoolManager.Instance?.ReturnObject(d.gameObject);
+            }
+        }
+    }
+
+    private void GetCurrentSizeChances(
+        out float small,
+        out float medium,
+        out float large)
+    {
+        int level = GetPlayerLevel();
+
+        int adjustments = level / Mathf.Max(1, levelsPerAdjustment);
+
+        small = Mathf.Max(
+            0f,
+            smallChance - adjustments * smallDecreasePerAdjustment
+        );
+
+        medium = Mathf.Max(
+            0f,
+            mediumChance + adjustments * mediumIncreasePerAdjustment
+        );
+
+        large = Mathf.Max(
+            0f,
+            largeChance + adjustments * largeIncreasePerAdjustment
+        );
     }
 }

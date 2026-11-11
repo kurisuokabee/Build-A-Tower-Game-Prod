@@ -14,6 +14,12 @@ public class PlayerEconomy : MonoBehaviour
     [SerializeField] private int baseExpRequired = 100;
     [SerializeField] private float expGrowth = 1.25f;
 
+    [Header("Block Capacity")]
+    [SerializeField] private float maxBlocksMultiplier = 1.5f;
+
+    public int MaxBlocks =>
+        Mathf.CeilToInt(startingBlocks * Mathf.Pow(maxBlocksMultiplier, Level - 1));
+
     public int Blocks { get; private set; }
     public int Exp { get; private set; }
     public int Level { get; private set; } = 1;
@@ -35,7 +41,7 @@ public class PlayerEconomy : MonoBehaviour
 
         Instance = this;
 
-        Blocks = startingBlocks;
+        Blocks = Mathf.Min(startingBlocks, MaxBlocks);
         Exp = startingExp;
         UpgradePoints = startingUpgradePoints;
 
@@ -46,7 +52,7 @@ public class PlayerEconomy : MonoBehaviour
     {
         if (amount <= 0) return;
 
-        Blocks += amount;
+        Blocks = Mathf.Min(Blocks + amount, MaxBlocks);
         OnResourcesChanged?.Invoke();
     }
 

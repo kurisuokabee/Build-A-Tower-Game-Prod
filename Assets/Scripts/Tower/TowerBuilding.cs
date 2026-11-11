@@ -19,6 +19,7 @@ public class TowerBuilding : MonoBehaviour
 
     public IReadOnlyList<TowerSection> Sections => sections;
     public int SuccessfulBuilds => successfulBuilds;
+    public event System.Action OnTowerSectionsChanged;
 
     private void Awake()
     {
@@ -57,7 +58,14 @@ public class TowerBuilding : MonoBehaviour
     }
 
     public bool InsertTowerSection(int index, TowerSection section)
-    {
+    {   
+        if (AbyssManager.Instance != null &&
+            !AbyssManager.Instance.CanBuildMoreSections)
+        {
+            Debug.Log("Reached the build limit!");
+            return false;
+        }
+
         if (section == null)
             return false;
 
@@ -92,6 +100,9 @@ public class TowerBuilding : MonoBehaviour
 
         RebuildTower();
         RefreshTemporaryUpgrades();
+
+        OnTowerSectionsChanged?.Invoke();
+        AbyssManager.Instance?.RefreshProgressUI();
 
         return true;
     }

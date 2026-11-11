@@ -26,6 +26,9 @@ public class TowerSectionUI : MonoBehaviour
     private PlayerEconomy economy;
     private TowerSectionUpgrade upgradeManager;
 
+    private float updateTimer;
+    [SerializeField] private float updateInterval = 1f;
+
     private void Start()
     {
         economy = PlayerEconomy.Instance;
@@ -36,6 +39,9 @@ public class TowerSectionUI : MonoBehaviour
 
         if (upgradeButton != null)
             upgradeButton.onClick.AddListener(OnUpgradeClicked);
+
+        if (tower != null)
+            tower.OnTowerSectionsChanged += UpdateUI;
 
         SubscribeToEvents();
         UpdateUI();
@@ -54,10 +60,21 @@ public class TowerSectionUI : MonoBehaviour
 
         if (upgradeManager != null)
             upgradeManager.OnUpgradesChanged -= UpdateUI;
+
+        if (tower != null)
+            tower.OnTowerSectionsChanged -= UpdateUI;
     }
 
     private void Update()
-    {
+    {   
+        updateTimer += Time.deltaTime;
+
+        if (updateTimer >= updateInterval)
+        {
+            updateTimer = 0f;
+            UpdateUI();
+        }
+        
         if (economy != PlayerEconomy.Instance)
         {
             if (economy != null)
@@ -119,9 +136,10 @@ public class TowerSectionUI : MonoBehaviour
 
             if (sectionButton != null)
             {
-                 sectionButton.interactable =
+                sectionButton.interactable =
                     sectionPrefab.IsUnlocked &&
                     tower != null &&
+                    tower.Sections.Count < AbyssManager.Instance.CurrentBuildLimit &&
                     PlayerEconomy.Instance != null &&
                     PlayerEconomy.Instance.Blocks >= cost;
             }

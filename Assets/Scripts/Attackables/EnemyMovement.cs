@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class EnemyMovement : MonoBehaviour
@@ -18,23 +19,20 @@ public class EnemyMovement : MonoBehaviour
 
     private void Update()
     {
-        if (attackableHealth == null)
+        if (attackableHealth != null && attackableHealth.IsStunned)
             return;
 
-        if (attackableHealth.IsStunned)
+        if (targetSection == null || !targetSection.gameObject.activeInHierarchy)
+        {
+            IsInAttackRange = false;
             return;
-
-        if (targetSection == null)
-            return;
+        }
 
         MoveToTarget();
     }
 
     private void MoveToTarget()
     {
-        if (targetSection == null)
-            return;
-
         Vector3 targetPosition = targetSection.transform.position;
 
         float distanceSquared =

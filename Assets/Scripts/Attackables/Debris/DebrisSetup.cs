@@ -6,29 +6,34 @@ using UnityEngine;
 [RequireComponent(typeof(Debris))]
 public class DebrisSetup : MonoBehaviour
 {
-    public void Initialize(DebrisData data)
+    
+    public void Initialize(DebrisData data, float healthMultiplier)
     {
-        if (data == null) return;
+        if (data == null)
+            return;
 
-        // Set sprite
         SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
-        if (sr != null && data.sprite != null)
-        {
-            sr.sprite = data.sprite;
-        }
 
-        // Setup fall speed
-        float speed = Random.Range(data.MinFallSpeed, data.MaxFallSpeed);
+        if (sr != null && data.sprite != null)
+            sr.sprite = data.sprite;
+
+        float speed = Random.Range(
+            data.MinFallSpeed,
+            data.MaxFallSpeed
+        );
+
         GetComponent<DebrisMovement>().Initialize(speed);
 
-        // Setup health
         AttackableHealth health = GetComponent<AttackableHealth>();
+
         if (health != null)
         {
-            health.InitializeHealth(data.MaxHealth);
+            float scaledHealth = data.MaxHealth * healthMultiplier;
+            health.InitializeHealth(scaledHealth);
         }
 
         AttackableReward reward = GetComponent<AttackableReward>();
+
         if (reward != null)
         {
             reward.Initialize(

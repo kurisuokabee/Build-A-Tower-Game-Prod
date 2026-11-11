@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 public class EnemyAttack : MonoBehaviour
@@ -13,7 +12,7 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private AttackType attackType;
     [SerializeField] private float attackRange = 1f;
     [SerializeField] private float attackInterval = 2f;
-    [SerializeField] private float damage = 10f;
+    [SerializeField] private int damage = 10;
 
     [Header("Ranged Settings")]
     [SerializeField] private GameObject projectilePrefab;
@@ -22,12 +21,13 @@ public class EnemyAttack : MonoBehaviour
     private TowerSection target;
     private AttackableHealth attackableHealth;
     private float attackTimer;
-
+    private EnemyMovement enemyMovement;
     public AttackType CurrentAttackType => attackType;
 
     private void Awake()
     {
         attackableHealth = GetComponent<AttackableHealth>();
+        enemyMovement = GetComponent<EnemyMovement>();
     }
 
     public void Initialize(
@@ -49,10 +49,7 @@ public class EnemyAttack : MonoBehaviour
         if (target == null || !target.gameObject.activeInHierarchy)
             return;
 
-        Vector3 difference =
-            target.transform.position - transform.position;
-
-        if (difference.sqrMagnitude > attackRange * attackRange)
+        if (enemyMovement != null && !enemyMovement.IsInAttackRange)
             return;
 
         attackTimer += Time.deltaTime;
@@ -60,36 +57,47 @@ public class EnemyAttack : MonoBehaviour
         if (attackTimer < attackInterval)
             return;
 
-        attackTimer = 0f;
+        bool attacked = attackType == AttackType.Melee
+            ? MeleeAttack()
+            : RangedAttack();
 
-        if (attackType == AttackType.Melee)
-            MeleeAttack();
-        else
-            RangedAttack();
+        if (attacked)
+            attackTimer = 0f;
     }
 
-    private void MeleeAttack()
+    private bool MeleeAttack()
     {
-        
+        if (AbyssManager.Instance == null)
+            return false;
+
+        AbyssManager.Instance.DamageTowerBlocks(damage);
+        return true;
     }
 
-    private void RangedAttack()
+    private bool RangedAttack()
     {
-        if (projectilePrefab == null)
-            return;
+        if (projectilePrefab == null || ObjectPoolManager.Instance == null)
+            return false;
 
-        GameObject projectile = Instantiate(
+        GameObject projectile = ObjectPoolManager.Instance.GetObject(
             projectilePrefab,
             transform.position,
             Quaternion.identity
         );
 
+        if (projectile == null)
+            return false;
+
         EnemyProjectile enemyProjectile =
             projectile.GetComponent<EnemyProjectile>();
 
-        if (enemyProjectile != null)
-            enemyProjectile.Initialize(target, projectileSpeed, damage);
-        else
-            Destroy(projectile);
+        if (enemyProjectile == null)
+        {
+            ObjectPoolManager.Instance.ReturnObject(projectile);
+            return false;
+        }
+
+        enemyProjectile.Initialize(target, projectileSpeed, damage);
+        return true;
     }
 }

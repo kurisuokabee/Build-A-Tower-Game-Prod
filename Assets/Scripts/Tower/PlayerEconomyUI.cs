@@ -9,6 +9,11 @@ public class PlayerEconomyUI : MonoBehaviour
     [SerializeField] private TMP_Text expText;
     [SerializeField] private TMP_Text uPointsText;
 
+    [Header("Blocks UI")]
+    [SerializeField] private Slider blocksSlider;
+    [SerializeField] private TMP_Text blocksProgressText;
+  
+
     [Header("Level UI")]
     [SerializeField] private Slider expSlider;
     [SerializeField] private TMP_Text expProgressText;
@@ -41,10 +46,22 @@ public class PlayerEconomyUI : MonoBehaviour
         if (economy == null) return;
 
         if (blocksText != null)
-            blocksText.text = $"Blocks:{economy.Blocks}";
+            blocksText.text = $"Blocks: {economy.Blocks}";
+
+        if (blocksSlider != null)
+        {
+            float maxBlocks = economy.MaxBlocks;
+
+            blocksSlider.maxValue = maxBlocks;
+            blocksSlider.value = Mathf.Clamp(economy.Blocks, 0, maxBlocks);
+
+            if (blocksProgressText != null)
+                blocksProgressText.text =
+                    $"{economy.Blocks} / {maxBlocks}";
+        }
 
         if (expText != null)
-            expText.text = $"EXP:{economy.Exp}";
+            expText.text = $"EXP: {economy.Exp}";
 
         if (expSlider != null)
         {
@@ -60,6 +77,6 @@ public class PlayerEconomyUI : MonoBehaviour
             levelText.text = $"Level {economy.Level}";
 
         if (uPointsText != null)
-            uPointsText.text = $"UPoints:{economy.UpgradePoints}";
+            uPointsText.text = $"UPoints: {economy.UpgradePoints}";
     }
 }
