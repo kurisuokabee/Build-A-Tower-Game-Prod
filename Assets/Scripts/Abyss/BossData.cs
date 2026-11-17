@@ -13,8 +13,7 @@ public class BossData : ScriptableObject
 
     [Header("Combat Stats")]
     [SerializeField] private float maxHealth = 300f;
-    [SerializeField] private float damage = 25f;
-
+   
     public float MaxHealth => maxHealth;
-    public float Damage => damage;
+    
 }

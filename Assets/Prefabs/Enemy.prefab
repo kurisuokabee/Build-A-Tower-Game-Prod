@@ -106,11 +106,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fa6ef6598d198d4b91a47eec6f25ee3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementType: 0
   moveSpeed: 2
   attackRange: 1
-  gravity: 20
-  groundY: -3.75
 --- !u!114 &1323277086985306164
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124,9 +121,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackType: 0
-  attackRange: 1
   attackInterval: 3
-  damage: 5
+  damage: 1
   projectilePrefab: {fileID: 9121807198593708600, guid: 2ff9cd9961a2cd4469768b2950abfc63, type: 3}
   projectileSpeed: 6
 --- !u!114 &-5322605307697249553
@@ -141,8 +137,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 367a26ab99e9dcf41adcd7252553a36b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyMovement: {fileID: 0}
   enemyAttack: {fileID: 0}
+  enemyMovement: {fileID: 0}
   spriteRenderer: {fileID: 0}
 --- !u!114 &6865732627042034392
 MonoBehaviour:
@@ -215,6 +211,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
+  giveRewards: 1
+  returnToPoolOnDeath: 1
 --- !u!114 &1335756900721854047
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -229,5 +227,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blocksReward: 5
   expReward: 10
-  applyExtraBlocksBonus: 0
   upgradePointChance: 0
+  blocksPerLevel: 5
+  expPerLevel: 5

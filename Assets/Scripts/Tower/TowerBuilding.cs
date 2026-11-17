@@ -8,7 +8,8 @@ public class TowerBuilding : MonoBehaviour
 
     [Header("Tower Sections")]
     [SerializeField] private TowerSection startingBase;
-
+    public TowerSection StartingBase => startingBase;
+    
     [Header("Build Cost Scaling")]
     [SerializeField] private int buildCostIncreasePerSection = 25;
 

@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,12 +9,14 @@ public class AbyssManager : MonoBehaviour
 
     [Header("Abyss Progression")]
     [SerializeField, Range(1, 4)] private int currentAbyssLevel = 1;
-    [SerializeField] private BossData[] bossDatas; 
+    [SerializeField] private BossData[] bossDatas;
 
     [Header("References")]
     [SerializeField] private EnemySpawner enemySpawner;
     [SerializeField] private DebrisSpawner debrisSpawner;
     [SerializeField] private TowerBuilding towerBuilding;
+    [SerializeField] private BossHealthBar bossHealthBar;
+    [SerializeField] private TextMeshProUGUI bossNameText;
 
     [Header("Level 4 Win Condition")]
     [SerializeField] private float level4TargetHeight = 50f;
@@ -22,13 +24,17 @@ public class AbyssManager : MonoBehaviour
     [Header("Build Limits")]
     [SerializeField] private int[] buildLimits = { 5, 10, 15 };
 
+    [Header("Boss Event UI")]
     [SerializeField] private Button bossEventButton;
 
-    
+    [Header("Boss Spawn Settings")]
+    [SerializeField] private float bossSpawnHeightOffset = 3f;
+
     public event Action<int> OnAbyssLevelChanged;
-    public event Action<float, float> OnBossTimerChanged; 
+    public event Action<float, float> OnBossTimerChanged;
     public event Action OnBossEventStarted;
-    public event Action<bool> OnBossEventEnded; 
+    public event Action<bool> OnBossEventEnded;
+    public event Action OnBuildLimitChanged;
 
     public bool IsBossEventActive { get; private set; }
     public bool IsLevel4HordeActive { get; private set; }
@@ -36,8 +42,6 @@ public class AbyssManager : MonoBehaviour
     private float bossTimer;
     private float bossTotalTime;
     private GameObject activeBossInstance;
-
-    public event Action OnBuildLimitChanged;
 
     public int CurrentBuildLimit
     {
@@ -48,7 +52,9 @@ public class AbyssManager : MonoBehaviour
 
             int index = currentAbyssLevel - 1;
 
-            if (buildLimits == null || index < 0 || index >= buildLimits.Length)
+            if (buildLimits == null ||
+                index < 0 ||
+                index >= buildLimits.Length)
                 return 5;
 
             return buildLimits[index];
@@ -65,7 +71,6 @@ public class AbyssManager : MonoBehaviour
         towerBuilding == null ||
         towerBuilding.Sections.Count < CurrentBuildLimit;
 
-
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -73,6 +78,7 @@ public class AbyssManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
     }
 
@@ -86,6 +92,12 @@ public class AbyssManager : MonoBehaviour
     {
         if (bossEventButton != null)
             bossEventButton.onClick.RemoveListener(StartBossEvent);
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     private void RefreshBossButton()
@@ -110,6 +122,9 @@ public class AbyssManager : MonoBehaviour
     {
         InitializeCurrentLevel();
         RefreshProgressUI();
+
+        if (bossHealthBar != null)
+            bossHealthBar.Hide();
     }
 
     private void Update()
@@ -119,14 +134,13 @@ public class AbyssManager : MonoBehaviour
             bossTimer -= Time.deltaTime;
             OnBossTimerChanged?.Invoke(bossTimer, bossTotalTime);
 
-            
-            if (activeBossInstance == null || !activeBossInstance.activeInHierarchy)
+            if (activeBossInstance == null ||
+                !activeBossInstance.activeInHierarchy)
             {
                 EndBossEvent(true);
                 return;
             }
 
-           
             if (bossTimer <= 0f)
             {
                 EndBossEvent(false);
@@ -134,13 +148,18 @@ public class AbyssManager : MonoBehaviour
             }
         }
 
-        if (IsLevel4HordeActive && GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing)
+        if (IsLevel4HordeActive &&
+            GameManager.Instance != null &&
+            GameManager.Instance.CurrentState == GameState.Playing)
         {
-            // check level 4 wincon
-            if (towerBuilding != null && towerBuilding.GetTopY() >= level4TargetHeight)
+            if (towerBuilding != null &&
+                towerBuilding.GetTopY() >= level4TargetHeight)
             {
                 IsLevel4HordeActive = false;
-                if (enemySpawner != null) enemySpawner.SetHordeActive(false);
+
+                if (enemySpawner != null)
+                    enemySpawner.SetHordeActive(false);
+
                 GameManager.Instance.WinGame();
             }
         }
@@ -148,17 +167,18 @@ public class AbyssManager : MonoBehaviour
 
     private void InitializeCurrentLevel()
     {
-        if (enemySpawner != null) enemySpawner.SetHordeActive(false);
-        if (debrisSpawner != null) debrisSpawner.SetSpawningEnabled(true);
+        if (enemySpawner != null)
+            enemySpawner.SetHordeActive(false);
+
+        if (debrisSpawner != null)
+            debrisSpawner.SetSpawningEnabled(true);
 
         if (currentAbyssLevel == 4)
-        {
             StartLevel4Horde();
-        }
     }
 
     public void StartBossEvent()
-    {   
+    {
         if (!IsBuildLimitReached)
             return;
 
@@ -166,59 +186,102 @@ public class AbyssManager : MonoBehaviour
             return;
 
         BossData data = GetCurrentBossData();
-        if (data == null || data.bossPrefab == null || ObjectPoolManager.Instance == null)
+
+        if (data == null ||
+            data.bossPrefab == null ||
+            ObjectPoolManager.Instance == null)
         {
-            Debug.LogWarning("Cannot start boss event: Missing BossData or ObjectPoolManager.");
+            Debug.LogWarning(
+                "Cannot start boss event: Missing BossData or ObjectPoolManager."
+            );
             return;
         }
 
-        IsBossEventActive = true;
-        RefreshBossButton();
+        // Initialize boss event.
         bossTotalTime = data.eventTimerLength;
         bossTimer = bossTotalTime;
+        IsBossEventActive = true;
 
-        // stop and clear active debris
+        RefreshBossButton();
+
+        // Stop and clear active debris.
         if (debrisSpawner != null)
         {
             debrisSpawner.SetSpawningEnabled(false);
             debrisSpawner.ClearAllDebris();
         }
 
-        // spawn boss using objectpoolmanager
-        Vector3 spawnPos = new Vector3(0f, 3f, 0f);
-        activeBossInstance = ObjectPoolManager.Instance.GetObject(data.bossPrefab, spawnPos, Quaternion.identity);
+        // Spawn boss.
+        Vector3 spawnPos = GetBossSpawnPosition();
 
-        if (activeBossInstance != null)
+        activeBossInstance = ObjectPoolManager.Instance.GetObject(
+            data.bossPrefab,
+            spawnPos,
+            Quaternion.identity
+        );
+
+        if (activeBossInstance == null)
         {
-            AttackableHealth health = activeBossInstance.GetComponent<AttackableHealth>();
-            if (health != null)
-            {
-                health.InitializeHealth(data.MaxHealth);
-            }
+            Debug.LogWarning("Failed to spawn boss.");
 
-            EnemySetup setup = activeBossInstance.GetComponent<EnemySetup>();
-            TowerSection target = towerBuilding != null && towerBuilding.Sections.Count > 0 ? towerBuilding.Sections[0] : null;
-            if (setup != null)
-            {
-                setup.Initialize(EnemyAttack.AttackType.Melee, target, data.bossSprite);
-            }
+            IsBossEventActive = false;
+            RefreshBossButton();
+            RestoreDebris();
+
+            return;
         }
 
+        // Initialize boss controller.
+        BossController bossController =
+            activeBossInstance.GetComponent<BossController>();
+
+        if (bossController == null)
+        {
+            Debug.LogWarning("Boss prefab is missing BossController.");
+
+            ObjectPoolManager.Instance.ReturnObject(activeBossInstance);
+            activeBossInstance = null;
+
+            IsBossEventActive = false;
+            RefreshBossButton();
+            RestoreDebris();
+
+            return;
+        }
+
+        bossController.Initialize(data);
+
+        // Display boss health bar.
+        if (bossHealthBar != null)
+            bossHealthBar.SetBoss(bossController);
+
+        bossNameText.text = data.bossName;
+
         OnBossEventStarted?.Invoke();
-        Debug.Log($"Boss Event started for Abyss Level {currentAbyssLevel}!");
+
+        Debug.Log(
+            $"Boss Event started for Abyss Level {currentAbyssLevel}!"
+        );
     }
 
     private void EndBossEvent(bool success)
     {
-        if (!IsBossEventActive) return;
+        if (!IsBossEventActive)
+            return;
 
         IsBossEventActive = false;
 
+        // Hide boss health bar.
+        if (bossHealthBar != null)
+            bossHealthBar.Hide();
+
+        // Return boss to pool.
         if (activeBossInstance != null)
         {
             if (activeBossInstance.activeInHierarchy)
             {
-                PooledObject pooled = activeBossInstance.GetComponent<PooledObject>();
+                PooledObject pooled =
+                    activeBossInstance.GetComponent<PooledObject>();
 
                 if (pooled != null)
                     pooled.ReturnToPool();
@@ -231,8 +294,9 @@ public class AbyssManager : MonoBehaviour
 
         if (success)
         {
-            Debug.Log($"Boss for Abyss Level {currentAbyssLevel} defeated!");
-            
+            Debug.Log(
+                $"Boss for Abyss Level {currentAbyssLevel} defeated!"
+            );
 
             currentAbyssLevel++;
             OnAbyssLevelChanged?.Invoke(currentAbyssLevel);
@@ -243,48 +307,59 @@ public class AbyssManager : MonoBehaviour
             }
             else
             {
-                if (currentAbyssLevel < 4 && debrisSpawner != null)
-                {
-                    debrisSpawner.RespawnInitialDebris();
-                    debrisSpawner.SetSpawningEnabled(true);
-                    OnBuildLimitChanged?.Invoke();
-                    RefreshBossButton();
-                }
+                RestoreDebris();
+                OnBuildLimitChanged?.Invoke();
+                RefreshBossButton();
             }
         }
         else
         {
             Debug.Log("Boss event timed out! Try again.");
-            // Restore the initial debris batch after the boss event.   
-            if (currentAbyssLevel < 4 && debrisSpawner != null)
-            {
-                debrisSpawner.RespawnInitialDebris();
-                debrisSpawner.SetSpawningEnabled(true);
-                OnBuildLimitChanged?.Invoke();
-                RefreshBossButton();
-            }
+
+            RestoreDebris();
+            OnBuildLimitChanged?.Invoke();
+            RefreshBossButton();
         }
 
         OnBossEventEnded?.Invoke(success);
     }
 
+    private void RestoreDebris()
+    {
+        if (currentAbyssLevel >= 4 || debrisSpawner == null)
+            return;
+
+        debrisSpawner.RespawnInitialDebris();
+        debrisSpawner.SetSpawningEnabled(true);
+    }
+
     private void StartLevel4Horde()
     {
         IsLevel4HordeActive = true;
-        if (debrisSpawner != null) debrisSpawner.SetSpawningEnabled(true);
-        if (enemySpawner != null) enemySpawner.SetHordeActive(true);
+
+        if (debrisSpawner != null)
+            debrisSpawner.SetSpawningEnabled(true);
+
+        if (enemySpawner != null)
+            enemySpawner.SetHordeActive(true);
+
         Debug.Log("Abyss Level 4 Endless Horde started!");
     }
 
     private BossData GetCurrentBossData()
     {
         int index = currentAbyssLevel - 1;
-        if (bossDatas != null && index >= 0 && index < bossDatas.Length)
+
+        if (bossDatas != null &&
+            index >= 0 &&
+            index < bossDatas.Length)
+        {
             return bossDatas[index];
+        }
+
         return null;
     }
 
-   
     public float GetCurrentDifficulty()
     {
         if (towerBuilding == null || towerBuilding.Sections == null)
@@ -295,14 +370,31 @@ public class AbyssManager : MonoBehaviour
 
     public void DamageTowerBlocks(int damageAmount)
     {
-        if (PlayerEconomy.Instance == null || damageAmount <= 0) return;
+        if (PlayerEconomy.Instance == null || damageAmount <= 0)
+            return;
 
-        
         int currentBlocks = PlayerEconomy.Instance.Blocks;
         int removeAmount = Mathf.Min(currentBlocks, damageAmount);
+
         if (removeAmount > 0)
-        {
             PlayerEconomy.Instance.SpendBlocks(removeAmount);
+    }
+
+    private Vector3 GetBossSpawnPosition()
+    {
+        if (towerBuilding == null ||
+            towerBuilding.StartingBase == null)
+        {
+            return new Vector3(0f, 3f, 0f);
         }
+
+        Vector3 towerPosition =
+            towerBuilding.StartingBase.transform.position;
+
+        return new Vector3(
+            towerPosition.x,
+            towerBuilding.GetTopY() + bossSpawnHeightOffset,
+            towerPosition.z
+        );
     }
 }

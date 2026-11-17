@@ -6,6 +6,7 @@ public class EnemyProjectile : MonoBehaviour
     private TowerSection target;
     private float moveSpeed;
     private int damage;
+    private bool canDamageTower = true;
 
     private PooledObject pooledObject;
 
@@ -17,11 +18,13 @@ public class EnemyProjectile : MonoBehaviour
     public void Initialize(
         TowerSection targetSection,
         float speed,
-        float damageAmount)
+        float damageAmount,
+        bool damageTower = true)
     {
         target = targetSection;
         moveSpeed = speed;
         damage = Mathf.RoundToInt(damageAmount);
+        canDamageTower = damageTower;
     }
 
     private void Update()
@@ -42,7 +45,7 @@ public class EnemyProjectile : MonoBehaviour
 
         if ((targetPosition - transform.position).sqrMagnitude <= 0.01f)
         {
-            if (AbyssManager.Instance != null)
+            if (canDamageTower && AbyssManager.Instance != null)
                 AbyssManager.Instance.DamageTowerBlocks(damage);
 
             ReturnToPool();

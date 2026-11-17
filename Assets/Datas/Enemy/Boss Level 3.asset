@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a446e08c0434b42825e4722e9b184c, type: 3}
   m_Name: Boss Level 3
   m_EditorClassIdentifier: 
-  bossName: Abyss Boss
-  bossPrefab: {fileID: 7049896600385680556, guid: aff36191139626f44aae222e526f347e, type: 3}
+  bossName: Vanthalyss
+  bossPrefab: {fileID: 3391023009011692513, guid: c2f35af16960eac46b6e4209615295c6, type: 3}
   bossSprite: {fileID: 0}
-  eventTimerLength: 60
-  maxHealth: 400
-  damage: 50
+  eventTimerLength: 180
+  maxHealth: 3000

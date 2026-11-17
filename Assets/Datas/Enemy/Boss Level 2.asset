@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a446e08c0434b42825e4722e9b184c, type: 3}
   m_Name: Boss Level 2
   m_EditorClassIdentifier: 
-  bossName: Abyss Boss
-  bossPrefab: {fileID: 7049896600385680556, guid: aff36191139626f44aae222e526f347e, type: 3}
+  bossName: Dovhlezar
+  bossPrefab: {fileID: 7603641867094077787, guid: 848ecdb7f08027047a6e8621c0df4496, type: 3}
   bossSprite: {fileID: 0}
-  eventTimerLength: 60
-  maxHealth: 350
-  damage: 30
+  eventTimerLength: 120
+  maxHealth: 2000

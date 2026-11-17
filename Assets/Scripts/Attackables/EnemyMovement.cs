@@ -17,6 +17,18 @@ public class EnemyMovement : MonoBehaviour
         attackableHealth = GetComponent<AttackableHealth>();
     }
 
+    private void OnEnable()
+    {
+        targetSection = null;
+        IsInAttackRange = false;
+    }
+
+    private void OnDisable()
+    {
+        targetSection = null;
+        IsInAttackRange = false;
+    }
+
     private void Update()
     {
         if (attackableHealth != null && attackableHealth.IsStunned)

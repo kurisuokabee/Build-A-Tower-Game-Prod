@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class EnemyAttack : MonoBehaviour
@@ -10,7 +11,6 @@ public class EnemyAttack : MonoBehaviour
 
     [Header("Attack Settings")]
     [SerializeField] private AttackType attackType;
-    [SerializeField] private float attackRange = 1f;
     [SerializeField] private float attackInterval = 2f;
     [SerializeField] private int damage = 10;
 
@@ -22,7 +22,9 @@ public class EnemyAttack : MonoBehaviour
     private AttackableHealth attackableHealth;
     private float attackTimer;
     private EnemyMovement enemyMovement;
+
     public AttackType CurrentAttackType => attackType;
+    public int Damage => damage;
 
     private void Awake()
     {
@@ -30,16 +32,21 @@ public class EnemyAttack : MonoBehaviour
         enemyMovement = GetComponent<EnemyMovement>();
     }
 
+    private void OnEnable()
+    {
+        attackTimer = 0f;
+        target = null;
+    }
+
     public void Initialize(
         AttackType type,
-        TowerSection targetSection,
-        float range)
+        TowerSection targetSection)
     {
         attackType = type;
         target = targetSection;
         attackTimer = 0f;
-        attackRange = range;
     }
+
 
     private void Update()
     {

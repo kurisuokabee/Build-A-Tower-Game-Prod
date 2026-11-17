@@ -27,7 +27,7 @@ public class EnemySetup : MonoBehaviour
             : Random.Range(4.5f, 7f);
 
         if (enemyAttack != null)
-            enemyAttack.Initialize(attackType, target, attackRange);
+            enemyAttack.Initialize(attackType, target);
 
         if (enemyMovement != null)
             enemyMovement.Initialize(target, attackRange);
