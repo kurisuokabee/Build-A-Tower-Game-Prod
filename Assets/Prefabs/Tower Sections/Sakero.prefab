@@ -141,7 +141,7 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 8
-  serenityRange: 20
+  serenityRange: 30
 --- !u!114 &6698564331622058249
 MonoBehaviour:
   m_ObjectHideFlags: 0

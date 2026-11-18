@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.7735849, g: 0.29556784, b: 0.29556784, a: 1}
+  m_Color: {r: 0.9528302, g: 0.7997578, b: 0.40899786, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -163,6 +163,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fedf7a561cf734d47a11f9a0198c1a82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fallSpeed: 3
+  rotationSpeedRange: {x: 15, y: 40}
+  scaleRange: {x: 0.8, y: 1.2}
 --- !u!114 &2791808815959293162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,6 +191,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
+  giveRewards: 1
+  returnToPoolOnDeath: 1
 --- !u!114 &3725602147704654952
 MonoBehaviour:
   m_ObjectHideFlags: 0

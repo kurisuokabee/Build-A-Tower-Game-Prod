@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0, g: 0.8396226, b: 0.60956067, a: 1}
+  m_Color: {r: 0.9811321, g: 0.7430836, b: 0.71733713, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -163,6 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fedf7a561cf734d47a11f9a0198c1a82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fallSpeed: 3
 --- !u!114 &5545352316949070797
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,6 +189,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
+  giveRewards: 1
+  returnToPoolOnDeath: 1
 --- !u!114 &5164629234400469379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -202,5 +205,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blocksReward: 5
   expReward: 10
-  applyExtraBlocksBonus: 0
   upgradePointChance: 0
+  blocksPerLevel: 5
+  expPerLevel: 5

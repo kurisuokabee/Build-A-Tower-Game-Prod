@@ -11,6 +11,11 @@ public class TowerUtilities : MonoBehaviour
     [SerializeField] private Button zealButton;
     [SerializeField] private Button serenityButton;
 
+    [Header("Cooldown Sliders")]
+    [SerializeField] private Slider rageCooldownSlider;
+    [SerializeField] private Slider zealCooldownSlider;
+    [SerializeField] private Slider serenityCooldownSlider;
+
     [Header("Rage")]
     [SerializeField] private float rageDuration = 10f;
     [SerializeField] private float rageCooldown = 180f;
@@ -65,16 +70,31 @@ public class TowerUtilities : MonoBehaviour
 
         if (serenityButton != null)
             serenityButton.onClick.AddListener(UseSerenity);
+
+        InitializeSlider(rageCooldownSlider);
+        InitializeSlider(zealCooldownSlider);
+        InitializeSlider(serenityCooldownSlider);
     }
 
     private void Start()
     {
         UpdateButtonStates();
+        UpdateCooldownSliders();
     }
 
     private void Update()
     {
         UpdateButtonStates();
+        UpdateCooldownSliders();
+    }
+
+    private void InitializeSlider(Slider slider)
+    {
+        if (slider == null) return;
+
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.value = 1f;
     }
 
     private void UpdateButtonStates()
@@ -87,6 +107,22 @@ public class TowerUtilities : MonoBehaviour
 
         if (serenityButton != null)
             serenityButton.interactable = SerenityCooldownRemaining <= 0f;
+    }
+
+    private void UpdateCooldownSliders()
+    {
+        UpdateSlider(rageCooldownSlider, RageCooldownRemaining, rageCooldown);
+        UpdateSlider(zealCooldownSlider, ZealCooldownRemaining, zealCooldown);
+        UpdateSlider(serenityCooldownSlider, SerenityCooldownRemaining, serenityCooldown);
+    }
+
+    private void UpdateSlider(Slider slider, float remaining, float cooldown)
+    {
+        if (slider == null) return;
+
+        slider.value = cooldown > 0f
+            ? 1f - (remaining / cooldown)
+            : 1f;
     }
 
     private void OnDestroy()

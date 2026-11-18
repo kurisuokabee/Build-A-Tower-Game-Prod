@@ -17,6 +17,7 @@ public class AbyssManager : MonoBehaviour
     [SerializeField] private TowerBuilding towerBuilding;
     [SerializeField] private BossHealthBar bossHealthBar;
     [SerializeField] private TextMeshProUGUI bossNameText;
+    [SerializeField] private GameObject buildLimitText;
 
     [Header("Level 4 Win Condition")]
     [SerializeField] private float level4TargetHeight = 50f;
@@ -102,14 +103,19 @@ public class AbyssManager : MonoBehaviour
 
     private void RefreshBossButton()
     {
-        if (bossEventButton == null)
-            return;
-
         bool shouldShow =
             IsBuildLimitReached &&
             !IsBossEventActive;
 
-        bossEventButton.gameObject.SetActive(shouldShow);
+        if (bossEventButton != null)
+            bossEventButton.gameObject.SetActive(shouldShow);
+
+        if (buildLimitText != null)
+            buildLimitText.SetActive(
+                !IsBuildLimitReached &&
+                !IsBossEventActive &&
+                currentAbyssLevel < 4
+            );
     }
 
     public void RefreshProgressUI()

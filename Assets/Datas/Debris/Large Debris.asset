@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   size: 2
   prefab: {fileID: 6819711539384968529, guid: 23958c8482ca8a1409595d46e05b5718, type: 3}
-  sprite: {fileID: 0}
+  sprite: {fileID: 21300000, guid: 99a92a428df144a4494e0c8879c7989c, type: 3}
   maxHealth: 120
   minFallSpeed: 0.3
   maxFallSpeed: 0.8

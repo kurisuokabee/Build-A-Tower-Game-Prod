@@ -9,7 +9,11 @@ public class TowerRelocationMode : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private Button toggleButton;
-    [SerializeField] private TMPro.TMP_Text buttonText;
+    [SerializeField] private Image buttonImage;
+
+    [Header("Button Colors")]
+    [SerializeField] private Color offColor = new Color32(158, 27, 40, 255);
+    [SerializeField] private Color onColor = new Color32(40, 158, 27, 255);
 
     public bool IsRelocationMode { get; private set; }
 
@@ -58,18 +62,16 @@ public class TowerRelocationMode : MonoBehaviour
         UpdateButton();
         OnModeChanged?.Invoke(IsRelocationMode);
 
-        Debug.Log(
-            $"Tower Relocation Mode: {(enabled ? "ON" : "OFF")}"
-        );
+        Debug.Log($"Tower Relocation Mode: {(enabled ? "ON" : "OFF")}");
     }
 
     private void UpdateButton()
     {
-        if (buttonText != null)
+        if (buttonImage != null)
         {
-            buttonText.text = IsRelocationMode
-                ? "Relocation: ON"
-                : "Relocation: OFF";
+            buttonImage.color = IsRelocationMode
+                ? onColor
+                : offColor;
         }
     }
 }
