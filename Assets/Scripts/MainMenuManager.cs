@@ -2,15 +2,57 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuManager : MonoBehaviour
 {
     [SerializeField] private GameObject settings;
 
+    [Header("Continue (Save System)")]
+    [Tooltip("The Continue button in the scene. Shown only when a save file exists.")]
+    [SerializeField] private Button continueButton;
+
+    private const string GameScene = "TowerBuilding";
+
+    private void Awake()
+    {
+        SaveSystem.ClearLoaded();
+        SetupContinueButton();
+    }
+
     public void PlayGame()
     {
+        SaveSystem.ClearLoaded();
         Time.timeScale = 1f;
-        SceneManager.LoadScene("TowerBuilding");
+        SceneManager.LoadScene(GameScene);
+    }
+
+    public void ContinueGame()
+    {
+        if (!SaveSystem.LoadForContinue())
+        {
+            if (continueButton != null)
+                continueButton.gameObject.SetActive(false);
+
+            return;
+        }
+
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(GameScene);
+    }
+
+    private void SetupContinueButton()
+    {
+        if (continueButton == null)
+        {
+            Debug.LogWarning("MainMenuManager: no Continue Button assigned.", this);
+            return;
+        }
+
+        continueButton.gameObject.SetActive(SaveSystem.HasSave());
+
+        continueButton.onClick.RemoveListener(ContinueGame);
+        continueButton.onClick.AddListener(ContinueGame);
     }
 
     public void QuitGame()
@@ -22,7 +64,6 @@ public class MainMenuManager : MonoBehaviour
         #endif
     }
 
-    
     public void ToggleSettings()
     {
         settings.SetActive(!settings.activeSelf);
@@ -36,6 +77,4 @@ public class MainMenuManager : MonoBehaviour
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
     }
-
-    
 }

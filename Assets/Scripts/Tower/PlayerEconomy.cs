@@ -16,7 +16,7 @@ public class PlayerEconomy : MonoBehaviour
 
     [Header("Block Capacity")]
     [SerializeField] private float maxBlocksMultiplier = 1.5f;
-
+    
     public int MaxBlocks =>
         Mathf.CeilToInt(startingBlocks * Mathf.Pow(maxBlocksMultiplier, Level - 1));
 
@@ -46,6 +46,37 @@ public class PlayerEconomy : MonoBehaviour
         UpgradePoints = startingUpgradePoints;
 
         UpdateExpRequirement();
+
+         if (SaveSystem.LoadedData != null)
+            ApplySaveData(SaveSystem.LoadedData.economy);
+    }
+    public EconomySaveData CreateSaveData()
+    {
+        return new EconomySaveData
+        {
+            level = Level,
+            blocks = Blocks,
+            exp = Exp,
+            currentLevelExp = CurrentLevelExp,
+            upgradePoints = UpgradePoints
+        };
+    }
+
+    public void ApplySaveData(EconomySaveData data)
+    {
+        if (data == null)
+            return;
+
+        
+        Level = Mathf.Max(1, data.level);
+        UpdateExpRequirement();
+
+        Exp = Mathf.Max(0, data.exp);
+        CurrentLevelExp = Mathf.Clamp(data.currentLevelExp, 0, ExpToNextLevel - 1);
+        UpgradePoints = Mathf.Max(0, data.upgradePoints);
+        Blocks = Mathf.Min(Mathf.Max(0, data.blocks), MaxBlocks);
+
+        OnResourcesChanged?.Invoke();
     }
 
     public void AddBlocks(int amount)

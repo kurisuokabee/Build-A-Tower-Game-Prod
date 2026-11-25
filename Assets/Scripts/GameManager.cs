@@ -123,6 +123,8 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+         SaveSystem.ClearLoaded();
+
         SceneManager.LoadScene(
             SceneManager.GetActiveScene().buildIndex
         );
@@ -130,6 +132,8 @@ public class GameManager : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
+        SaveSystem.Save(); 
+        
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
     }
