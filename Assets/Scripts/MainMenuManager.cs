@@ -2,6 +2,11 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+<<<<<<< Updated upstream
+=======
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+>>>>>>> Stashed changes
 
 public class MainMenuManager : MonoBehaviour
 {
@@ -10,6 +15,16 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject sakeroSelectionPanel;
 
+<<<<<<< Updated upstream
+=======
+    
+    [Header("Continue (Save System)")]
+    [Tooltip("The Continue button in the scene. Shown only when a save file exists.")]
+    [SerializeField] private Button continueButton;
+
+    private const string GameScene = "TowerBuilding";
+
+>>>>>>> Stashed changes
     private void Start()
     {
         ShowMainMenu();
@@ -40,6 +55,14 @@ public class MainMenuManager : MonoBehaviour
         sakeroSelectionPanel.SetActive(true);
 
         ResetPointer();
+<<<<<<< Updated upstream
+=======
+    }
+    private void Awake()
+    {
+        SaveSystem.ClearLoaded();
+        //SetupContinueButton();
+>>>>>>> Stashed changes
     }
 
     public void QuitGame()

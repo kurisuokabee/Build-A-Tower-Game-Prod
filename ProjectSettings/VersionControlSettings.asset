@@ -3,5 +3,9 @@
 --- !u!890905787 &1
 VersionControlSettings:
   m_ObjectHideFlags: 0
+<<<<<<< Updated upstream
   m_Mode: Visible Meta Files
+=======
+  m_Mode: Hidden Meta Files
+>>>>>>> Stashed changes
   m_TrackPackagesOutsideProject: 0
