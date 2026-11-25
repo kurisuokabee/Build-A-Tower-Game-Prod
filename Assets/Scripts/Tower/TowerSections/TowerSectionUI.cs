@@ -12,13 +12,17 @@ public class TowerSectionUI : MonoBehaviour
 
     [Header("Build UI")]
     [SerializeField] private Button sectionButton;
-    [SerializeField] private TMP_Text sectionNameText;
     [SerializeField] private TMP_Text blockCostText;
-    [SerializeField] private TMP_Text levelText;
+    
 
     [Header("Upgrade UI")]
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TMP_Text resourceCostText;
+
+    [Header("Stats UI")]
+    [SerializeField] private TMP_Text statsLevelText;
+    [SerializeField] private TMP_Text damageText;
+    [SerializeField] private TMP_Text attackSpeedText;
 
     public static bool IsHoldingSection { get; private set; }
     public static bool IgnoreRelocatorClick { get; private set; }
@@ -27,6 +31,7 @@ public class TowerSectionUI : MonoBehaviour
     private TowerSectionUpgrade upgradeManager;
 
     private float updateTimer;
+
     [SerializeField] private float updateInterval = 1f;
 
     private void Start()
@@ -66,7 +71,7 @@ public class TowerSectionUI : MonoBehaviour
     }
 
     private void Update()
-    {   
+    {
         updateTimer += Time.deltaTime;
 
         if (updateTimer >= updateInterval)
@@ -74,7 +79,7 @@ public class TowerSectionUI : MonoBehaviour
             updateTimer = 0f;
             UpdateUI();
         }
-        
+
         if (economy != PlayerEconomy.Instance)
         {
             if (economy != null)
@@ -114,25 +119,13 @@ public class TowerSectionUI : MonoBehaviour
     public void UpdateUI()
     {
         if (sectionPrefab != null)
-        {   
+        {
             int cost = tower != null
                 ? tower.GetCurrentBuildCost(sectionPrefab)
                 : sectionPrefab.BlockCost;
 
-            if (sectionNameText != null)
-                sectionNameText.text = sectionPrefab.name;
-
             if (blockCostText != null)
                 blockCostText.text = $"{cost} Blocks";
-
-            if (levelText != null)
-            {
-                int level = upgradeManager != null
-                    ? upgradeManager.GetLevel(upgradeID)
-                    : 0;
-
-                levelText.text = $"Level: {level}";
-            }
 
             if (sectionButton != null)
             {
@@ -167,6 +160,47 @@ public class TowerSectionUI : MonoBehaviour
         {
             upgradeButton.interactable = false;
         }
+
+        UpdateStatsUI();
+    }
+
+    private void UpdateStatsUI()
+    {
+        if (sectionPrefab == null || sectionPrefab.Data == null)
+            return;
+
+        int level = upgradeManager != null
+            ? upgradeManager.GetLevel(upgradeID)
+            : 0;
+
+        float damage = sectionPrefab.Data.damage;
+        float attackSpeed = sectionPrefab.Data.attacksPerSecond;
+
+        // Use actual stats from a built section when available.
+        if (tower != null && tower.Sections != null)
+        {
+            foreach (TowerSection section in tower.Sections)
+            {
+                if (section == null || section.Data == null)
+                    continue;
+
+                if (section.Data.towerUpgradeID != upgradeID)
+                    continue;
+
+                damage = section.EffectiveDamage;
+                attackSpeed = section.EffectiveAttacksPerSecond;
+                break;
+            }
+        }
+
+        if (statsLevelText != null)
+            statsLevelText.text = $"LVL: {level}";
+
+        if (damageText != null)
+            damageText.text = $"DMG: {damage:0.##}";
+
+        if (attackSpeedText != null)
+            attackSpeedText.text = $"ATK SPD: {attackSpeed:0.##}";
     }
 
     private void OnSectionButtonClicked()
@@ -190,6 +224,8 @@ public class TowerSectionUI : MonoBehaviour
             Destroy(newSection.gameObject);
             return;
         }
+        
+        newSection.PlayPlaceEffect();
 
         UpdateUI();
     }

@@ -6,6 +6,7 @@ public class TowerArrow : TowerSection
 {
     private TowerSectionUpgradeTree upgradeTree;
     private ArrowFiringController firingController;
+
     private readonly List<AttackableHealth> homingTargetBuffer = new();
 
     private bool IsPiercing =>
@@ -152,15 +153,12 @@ public class TowerArrow : TowerSection
         return null;
     }
 
-    protected override void Attack(
-        IReadOnlyList<AttackableHealth> targets)
+    protected override void Attack(IReadOnlyList<AttackableHealth> targets)
     {
         if (firingController == null ||
             targets == null ||
             targets.Count == 0)
-        {
             return;
-        }
 
         if (IsHoming)
         {

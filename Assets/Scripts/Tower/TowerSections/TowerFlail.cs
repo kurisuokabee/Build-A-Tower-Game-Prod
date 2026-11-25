@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -55,11 +56,6 @@ public class TowerFlail : TowerSection
         }
     }
 
-    protected override void Start()
-    {
-        base.Start();
-    }
-
     private void OnEnable()
     {
         TowerBuilding.Instance?.RefreshTemporaryUpgrades();
@@ -92,6 +88,6 @@ public class TowerFlail : TowerSection
 
     protected override void ApplyUpgradeStats()
     {
-        Damage += 1f;
+        Damage += 0.5f;
     }
 }

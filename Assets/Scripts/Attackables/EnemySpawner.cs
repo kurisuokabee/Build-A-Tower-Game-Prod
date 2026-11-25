@@ -35,8 +35,7 @@ public class EnemySpawner : MonoBehaviour
             ? AbyssManager.Instance.GetCurrentDifficulty()
             : 1f;
 
-        float enemiesPerSecond = 0.3f + (difficulty * 0.1f);
-        float interval = Mathf.Max(2f, 1f / enemiesPerSecond);
+        float interval = Mathf.Max(2f, 15f - (difficulty * 0.1f));
 
         if (spawnTimer >= interval)
         {
@@ -116,9 +115,8 @@ public class EnemySpawner : MonoBehaviour
         if (setup != null)
         {
             setup.Initialize(
-                data.attackType,
-                target,
-                data.sprite
+                data,
+                target
             );
         }
     }

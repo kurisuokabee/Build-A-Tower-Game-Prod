@@ -41,7 +41,7 @@ public class AutoButtonSound : MonoBehaviour
    
     void ApplyToAllButtons()
     {
-        Button[] buttons = FindObjectsByType<Button>(FindObjectsSortMode.None);
+        Button[] buttons = FindObjectsByType<Button>();
 
         foreach (Button btn in buttons)
         {

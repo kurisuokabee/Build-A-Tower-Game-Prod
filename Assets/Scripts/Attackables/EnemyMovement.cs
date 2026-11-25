@@ -9,12 +9,14 @@ public class EnemyMovement : MonoBehaviour
 
     private TowerSection targetSection;
     private AttackableHealth attackableHealth;
+    private AttackableSlow attackableSlow;
 
     public bool IsInAttackRange { get; private set; }
 
     private void Awake()
     {
         attackableHealth = GetComponent<AttackableHealth>();
+        attackableSlow = GetComponent<AttackableSlow>();
     }
 
     private void OnEnable()
@@ -55,10 +57,14 @@ public class EnemyMovement : MonoBehaviour
         if (IsInAttackRange)
             return;
 
+        float speedMultiplier = attackableSlow != null
+            ? attackableSlow.CurrentSpeedMultiplier
+            : 1f;
+
         transform.position = Vector3.MoveTowards(
             transform.position,
             targetPosition,
-            moveSpeed * Time.deltaTime
+            moveSpeed * speedMultiplier * Time.deltaTime
         );
     }
 

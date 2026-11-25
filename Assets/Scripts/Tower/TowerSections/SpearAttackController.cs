@@ -28,6 +28,7 @@ public class SpearAttackController : MonoBehaviour
 
     private float leftHandleBaseWidth;
     private float rightHandleBaseWidth;
+    private TowerSection towerSection;
 
     private readonly HashSet<AttackableHealth> hitTargets = new();
 
@@ -46,6 +47,8 @@ public class SpearAttackController : MonoBehaviour
         if (rightSpear != null)
             rightRestPosition = rightSpear.localPosition;
 
+        towerSection = GetComponent<TowerSection>();
+        
         CacheHandle(
             leftHandleSprite,
             out leftHandlePosition,
@@ -301,7 +304,11 @@ public class SpearAttackController : MonoBehaviour
                 ? damage * 2f
                 : damage;
 
-            target.TakeDamage(finalDamage);
+        
+            towerSection?.ApplyWandImpact(target);
+
+            if (target.IsAlive)
+                target.TakeDamage(finalDamage);
 
             if (target.IsAlive && isStunning)
                 target.ApplyStun(stunDuration);

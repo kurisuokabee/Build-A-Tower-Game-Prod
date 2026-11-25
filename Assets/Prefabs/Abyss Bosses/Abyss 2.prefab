@@ -46,8 +46,8 @@ GameObject:
   - component: {fileID: 2892208585349990242}
   - component: {fileID: -3241301457894401055}
   - component: {fileID: 6175234057836519986}
-  - component: {fileID: 1735803695482467382}
   - component: {fileID: 1602745825716828358}
+  - component: {fileID: 4880841122144170380}
   m_Layer: 3
   m_Name: Abyss 2
   m_TagString: Untagged
@@ -73,6 +73,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6763550523058479956
 SpriteRenderer:
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -91,6 +92,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -112,10 +115,12 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_SortingOrder: 70
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 21300000, guid: a135d052c7ef4774a9da22cef8fc075e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -124,8 +129,8 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+  m_BlendShapeWeights: []
 --- !u!114 &1497913183245415472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,8 +147,8 @@ MonoBehaviour:
   clonesPerSide: 6
   horizontalSpacing: 5
   verticalSpacing: 6
-  minSwitchInterval: 3
-  maxSwitchInterval: 9
+  minSwitchInterval: 6
+  maxSwitchInterval: 12
 --- !u!114 &3313467928173858606
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -199,8 +204,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95bec593d3f2d014bb5d02ac2dbae2a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!61 &1735803695482467382
-BoxCollider2D:
+  bobbingAmount: 0.08
+  bobbingSpeed: 2
+--- !u!114 &1602745825716828358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7603641867094077787}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75f9b3c497334a6489e52a8d4c767cdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minAttackInterval: 2
+  maxAttackInterval: 5
+  projectileSpeed: 5
+  damage: 10
+  projectilePrefab: {fileID: 9121807198593708600, guid: 2ff9cd9961a2cd4469768b2950abfc63, type: 3}
+  projectileSpawnPoint: {fileID: 4283877598497699615}
+--- !u!58 &4880841122144170380
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -234,31 +259,4 @@ BoxCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 1}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &1602745825716828358
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7603641867094077787}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 75f9b3c497334a6489e52a8d4c767cdc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attackInterval: 3
-  projectileSpeed: 5
-  damage: 10
-  projectilePrefab: {fileID: 9121807198593708600, guid: 2ff9cd9961a2cd4469768b2950abfc63, type: 3}
-  projectileSpawnPoint: {fileID: 4283877598497699615}
+  m_Radius: 1

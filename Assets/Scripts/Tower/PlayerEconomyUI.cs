@@ -77,6 +77,6 @@ public class PlayerEconomyUI : MonoBehaviour
             levelText.text = $"Level {economy.Level}";
 
         if (uPointsText != null)
-            uPointsText.text = $"UPoints: {economy.UpgradePoints}";
+            uPointsText.text = $"Gems: {economy.UpgradePoints}";
     }
 }

@@ -1,4 +1,5 @@
 
+using System.Collections;
 using UnityEngine;
 
 public class EnemyAttack : MonoBehaviour
@@ -18,10 +19,28 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private float projectileSpeed = 6f;
 
+    [Header("Rotation")]
+    [SerializeField] private bool rotateTowardsTarget = true;
+    [SerializeField] private float rotationSpeed = 360f;
+    [SerializeField] private float rotationOffset = 0f;
+
+    [Header("Ranged Animation")]
+    [SerializeField] private float rangedSquash = 0.7f;
+    [SerializeField] private float rangedStretch = 1.3f;
+    [SerializeField] private float rangedAnimationDuration = 0.2f;
+
+    [Header("Melee Animation")]
+    [SerializeField] private float meleeRotationAngle = 25f;
+    [SerializeField] private float meleeAnimationDuration = 0.2f;
+
     private TowerSection target;
     private AttackableHealth attackableHealth;
     private float attackTimer;
     private EnemyMovement enemyMovement;
+
+    private Vector3 originalScale;
+    private Quaternion originalRotation;
+    private Coroutine attackAnimation;
 
     public AttackType CurrentAttackType => attackType;
     public int Damage => damage;
@@ -30,12 +49,17 @@ public class EnemyAttack : MonoBehaviour
     {
         attackableHealth = GetComponent<AttackableHealth>();
         enemyMovement = GetComponent<EnemyMovement>();
+
+        originalScale = transform.localScale;
+        originalRotation = transform.rotation;
     }
 
     private void OnEnable()
     {
         attackTimer = 0f;
         target = null;
+
+        transform.localScale = originalScale;
     }
 
     public void Initialize(
@@ -47,14 +71,15 @@ public class EnemyAttack : MonoBehaviour
         attackTimer = 0f;
     }
 
-
     private void Update()
     {
+        if (target == null || !target.gameObject.activeInHierarchy)
+            return;
+
         if (attackableHealth != null && attackableHealth.IsStunned)
             return;
 
-        if (target == null || !target.gameObject.activeInHierarchy)
-            return;
+        RotateTowardsTarget();
 
         if (enemyMovement != null && !enemyMovement.IsInAttackRange)
             return;
@@ -69,7 +94,30 @@ public class EnemyAttack : MonoBehaviour
             : RangedAttack();
 
         if (attacked)
+        {
             attackTimer = 0f;
+            PlayAttackAnimation();
+        }
+    }
+
+    private void RotateTowardsTarget()
+    {
+        if (!rotateTowardsTarget || target == null)
+            return;
+
+        Vector2 direction =
+            (Vector2)(target.transform.position - transform.position);
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        angle += rotationOffset;
+
+        Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
+
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime
+        );
     }
 
     private bool MeleeAttack()
@@ -106,5 +154,134 @@ public class EnemyAttack : MonoBehaviour
 
         enemyProjectile.Initialize(target, projectileSpeed, damage);
         return true;
+    }
+
+    private void PlayAttackAnimation()
+    {
+        if (attackAnimation != null)
+            StopCoroutine(attackAnimation);
+
+        attackAnimation = attackType == AttackType.Ranged
+            ? StartCoroutine(RangedAttackAnimation())
+            : StartCoroutine(MeleeAttackAnimation());
+    }
+
+    private IEnumerator RangedAttackAnimation()
+    {
+        Vector3 startScale = transform.localScale;
+
+        Vector3 squashedScale = new Vector3(
+            originalScale.x * rangedSquash,
+            originalScale.y ,
+            originalScale.z
+        );
+
+        Vector3 stretchedScale = new Vector3(
+            originalScale.x * rangedStretch,
+            originalScale.y ,
+            originalScale.z
+        );
+
+        float halfDuration = rangedAnimationDuration * 0.5f;
+        float timer = 0f;
+
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t = Mathf.Clamp01(timer / halfDuration);
+
+            transform.localScale = Vector3.Lerp(
+                startScale,
+                squashedScale,
+                t
+            );
+
+            yield return null;
+        }
+
+        timer = 0f;
+
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t = Mathf.Clamp01(timer / halfDuration);
+
+            transform.localScale = Vector3.Lerp(
+                squashedScale,
+                stretchedScale,
+                t
+            );
+
+            yield return null;
+        }
+
+        transform.localScale = originalScale;
+        attackAnimation = null;
+    }
+
+    private IEnumerator MeleeAttackAnimation()
+    {
+        Quaternion startingRotation = transform.rotation;
+
+        Quaternion backwardRotation =
+            startingRotation * Quaternion.Euler(
+                0f, 0f, -meleeRotationAngle
+            );
+
+        Quaternion forwardRotation =
+            startingRotation * Quaternion.Euler(
+                0f, 0f, meleeRotationAngle
+            );
+
+        float halfDuration = meleeAnimationDuration * 0.5f;
+        float timer = 0f;
+
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t = Mathf.Clamp01(timer / halfDuration);
+
+            transform.rotation = Quaternion.Slerp(
+                startingRotation,
+                backwardRotation,
+                t
+            );
+
+            yield return null;
+        }
+
+        timer = 0f;
+
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t = Mathf.Clamp01(timer / halfDuration);
+
+            transform.rotation = Quaternion.Slerp(
+                backwardRotation,
+                forwardRotation,
+                t
+            );
+
+            yield return null;
+        }
+
+        transform.rotation = startingRotation;
+        attackAnimation = null;
+    }
+
+    private void OnDisable()
+    {
+        if (attackAnimation != null)
+        {
+            StopCoroutine(attackAnimation);
+            attackAnimation = null;
+        }
+
+        transform.localScale = originalScale;
     }
 }

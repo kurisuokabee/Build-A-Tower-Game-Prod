@@ -11,8 +11,13 @@ public class Abyss3BossMovement : MonoBehaviour
     [SerializeField, Min(0.1f)] private float rotationSpeed = 30f;
     [SerializeField] private float heightOffset = 5f;
 
+    [Header("Movement Shake")]
+    [SerializeField] private float shakeAmount = 0.08f;
+    [SerializeField] private float shakeSpeed = 40f;
+
     private Vector3 circleCenter;
     private float angle;
+    private float shakeTimer;
 
     private void Start()
     {
@@ -54,6 +59,16 @@ public class Abyss3BossMovement : MonoBehaviour
             0f
         );
 
-        transform.position = circleCenter + offset;
+        Vector3 movementPosition = circleCenter + offset;
+
+        shakeTimer += Time.deltaTime * shakeSpeed;
+
+        Vector3 shakeOffset = new Vector3(
+            Random.Range(-shakeAmount, shakeAmount),
+            Random.Range(-shakeAmount, shakeAmount),
+            0f
+        );
+
+        transform.position = movementPosition + shakeOffset;
     }
 }

@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -139,7 +140,7 @@ public class TowerSpear : TowerSection
 
     protected override void ApplyUpgradeStats()
     {
-        Damage += 1f;
+        Damage += 1.5f;
         AttacksPerSecond += 0.1f;
     }
 }

@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Boss Data", menuName = "Abyss/Boss Data")]
@@ -13,7 +14,11 @@ public class BossData : ScriptableObject
 
     [Header("Combat Stats")]
     [SerializeField] private float maxHealth = 300f;
-   
+
+    [Header("Rewards")]
+    [Min(0)] public int blocksReward = 100;
+    [Min(0)] public int expReward = 100;
+    [Min(0)] public int upgradePointsReward = 1;
+
     public float MaxHealth => maxHealth;
-    
 }

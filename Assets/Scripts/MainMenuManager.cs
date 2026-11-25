@@ -1,12 +1,20 @@
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MainMenuManager : MonoBehaviour
 {
-    [SerializeField] private GameObject settings;
+    [Header("Panels")]
+    [SerializeField] private GameObject mainMenuPanel;
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private GameObject sakeroSelectionPanel;
+
+    private void Start()
+    {
+        ShowMainMenu();
+    }
 
     [Header("Continue (Save System)")]
     [Tooltip("The Continue button in the scene. Shown only when a save file exists.")]
@@ -20,53 +28,24 @@ public class MainMenuManager : MonoBehaviour
         SetupContinueButton();
     }
 
-    public void PlayGame()
+    public void ShowMainMenu()
     {
-        SaveSystem.ClearLoaded();
         Time.timeScale = 1f;
-        SceneManager.LoadScene(GameScene);
-    }
-
-    public void ContinueGame()
-    {
-        if (!SaveSystem.LoadForContinue())
-        {
-            if (continueButton != null)
-                continueButton.gameObject.SetActive(false);
-
-            return;
-        }
-
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(GameScene);
-    }
-
-    private void SetupContinueButton()
-    {
-        if (continueButton == null)
-        {
-            Debug.LogWarning("MainMenuManager: no Continue Button assigned.", this);
-            return;
-        }
-
-        continueButton.gameObject.SetActive(SaveSystem.HasSave());
-
-        continueButton.onClick.RemoveListener(ContinueGame);
-        continueButton.onClick.AddListener(ContinueGame);
+        SceneManager.LoadScene("TowerBuilding");
     }
 
     public void QuitGame()
     {
         Application.Quit();
 
-        #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-        #endif
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 
+    
     public void ToggleSettings()
     {
-        settings.SetActive(!settings.activeSelf);
         StartCoroutine(ResetPointerState());
     }
 

@@ -11,12 +11,12 @@ GameObject:
   - component: {fileID: 4987113336933322758}
   - component: {fileID: 8594314140492243017}
   - component: {fileID: 8304592553257205420}
-  - component: {fileID: 3115900974465458219}
   - component: {fileID: 9172592404254675946}
   - component: {fileID: 3587491666065487171}
   - component: {fileID: 1560631077336738926}
   - component: {fileID: 5008032581905728775}
   - component: {fileID: 8796573728957595130}
+  - component: {fileID: 7900026074300058806}
   m_Layer: 3
   m_Name: Abyss 1
   m_TagString: Untagged
@@ -43,6 +43,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8594314140492243017
 SpriteRenderer:
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -61,6 +62,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -82,10 +85,12 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_SortingOrder: 70
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 21300000, guid: 4bac577f9d3c75949b4672a064c3b01e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -94,8 +99,8 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+  m_BlendShapeWeights: []
 --- !u!114 &8304592553257205420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -111,8 +116,95 @@ MonoBehaviour:
   maxHealth: 100
   giveRewards: 1
   returnToPoolOnDeath: 1
---- !u!61 &3115900974465458219
-BoxCollider2D:
+--- !u!114 &9172592404254675946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 520402481058813827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 352c9146cf61f7b4782f1b53a23986b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 0}
+  attackableReward: {fileID: 0}
+  stunDuration: 3
+  attackController: {fileID: 3587491666065487171}
+  shield: {fileID: 3977316152319269563}
+  movementResumeDelay: 5
+--- !u!114 &3587491666065487171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 520402481058813827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a454c5a5c52198842a66fdf62fcddcf9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  projectilePrefab: {fileID: 6601814793245174929, guid: 2606ce13e0181694aa53af756f38661e, type: 3}
+  projectileSpeed: 0.25
+  projectileSpawnPoint: {fileID: 7659978482702450539}
+  bossController: {fileID: 9172592404254675946}
+--- !u!114 &1560631077336738926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 520402481058813827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e7e18a9c90b7b64d877bb88f3006412, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 8304592553257205420}
+  attackableReward: {fileID: 0}
+--- !u!114 &5008032581905728775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 520402481058813827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f217d7bd4f497f448e3aa0330e8a288, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blocksReward: 5
+  expReward: 10
+  guaranteedUpgradePoints: 0
+  upgradePointChance: 0
+  blocksPerLevel: 5
+  expPerLevel: 5
+--- !u!114 &8796573728957595130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 520402481058813827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4354efe00ee8ce4c82ab6e67dfb8231, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bossController: {fileID: 0}
+  movementSpeed: 3
+  backAndForthDistance: 6
+  backAndForthHeight: 8
+  triangleRadius: 7
+  squareRadius: 8
+  circleRadius: 9
+  rotationSpeed: 360
+  circleSegments: 36
+--- !u!58 &7900026074300058806
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -146,99 +238,7 @@ BoxCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 1}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &9172592404254675946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 520402481058813827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 352c9146cf61f7b4782f1b53a23986b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  health: {fileID: 0}
-  stunDuration: 3
-  attackController: {fileID: 3587491666065487171}
-  shield: {fileID: 3977316152319269563}
---- !u!114 &3587491666065487171
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 520402481058813827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a454c5a5c52198842a66fdf62fcddcf9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  projectilePrefab: {fileID: 6601814793245174929, guid: 2606ce13e0181694aa53af756f38661e, type: 3}
-  projectileSpeed: 0.25
-  projectileSpawnPoint: {fileID: 7659978482702450539}
-  bossController: {fileID: 9172592404254675946}
---- !u!114 &1560631077336738926
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 520402481058813827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e7e18a9c90b7b64d877bb88f3006412, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  health: {fileID: 8304592553257205420}
---- !u!114 &5008032581905728775
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 520402481058813827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f217d7bd4f497f448e3aa0330e8a288, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  blocksReward: 5
-  expReward: 10
-  upgradePointChance: 0
-  blocksPerLevel: 5
-  expPerLevel: 5
---- !u!114 &8796573728957595130
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 520402481058813827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4354efe00ee8ce4c82ab6e67dfb8231, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bossController: {fileID: 0}
-  movementSpeed: 3
-  backAndForthDistance: 6
-  backAndForthHeight: 8
-  triangleRadius: 7
-  squareRadius: 8
-  circleRadius: 9
-  circleSegments: 36
+  m_Radius: 1
 --- !u!1 &2353920325752405638
 GameObject:
   m_ObjectHideFlags: 0
@@ -250,7 +250,7 @@ GameObject:
   - component: {fileID: 715995284255205787}
   - component: {fileID: 1499243039005512328}
   - component: {fileID: 3977316152319269563}
-  - component: {fileID: 9050386546714516123}
+  - component: {fileID: 7073627892740946133}
   m_Layer: 3
   m_Name: Shield
   m_TagString: Untagged
@@ -302,8 +302,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   health: {fileID: 1499243039005512328}
   boss: {fileID: 9172592404254675946}
---- !u!61 &9050386546714516123
-BoxCollider2D:
+--- !u!58 &7073627892740946133
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -337,17 +337,7 @@ BoxCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Radius: 1
 --- !u!1 &3035785546070764520
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,7 +363,7 @@ Transform:
   m_GameObject: {fileID: 3035785546070764520}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.472, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
