@@ -49,8 +49,8 @@ public class CameraControls : MonoBehaviour
 
         targetZoom -= Mathf.Sign(scrollInput) * zoomSpeed;
 
-        // Keep zoom within the original size and ceiling limit.
         float bottomY = transform.position.y - cam.orthographicSize;
+
         float maxAllowedZoom = Mathf.Max(
             originalZoom,
             ceilingLimit - bottomY
@@ -63,7 +63,6 @@ public class CameraControls : MonoBehaviour
         );
     }
 
-    
     private void HandleZoom()
     {
         float oldZoom = cam.orthographicSize;
@@ -82,33 +81,25 @@ public class CameraControls : MonoBehaviour
         float oldTop = position.y + oldZoom;
         float oldBottom = position.y - oldZoom;
 
-        // If the camera is at the ceiling and zooming out,
-        // keep its top edge fixed.
         bool zoomingOut = newZoom > oldZoom;
         bool topAtCeiling = oldTop >= ceilingLimit - 0.01f;
 
         cam.orthographicSize = newZoom;
 
         if (zoomingOut && topAtCeiling)
-        {
             position.y = ceilingLimit - newZoom;
-        }
         else
-        {
-            // Otherwise, keep the bottom edge fixed.
             position.y = oldBottom + newZoom;
-        }
 
         transform.position = position;
     }
 
-
     private void HandlePan()
     {
-        if (Mouse.current.middleButton.wasPressedThisFrame)
+        if (Mouse.current.leftButton.wasPressedThisFrame)
             lastMouseY = Mouse.current.position.ReadValue().y;
 
-        if (!Mouse.current.middleButton.isPressed)
+        if (!Mouse.current.leftButton.isPressed)
             return;
 
         float currentMouseY = Mouse.current.position.ReadValue().y;
@@ -120,9 +111,15 @@ public class CameraControls : MonoBehaviour
         Vector3 position = transform.position;
         position.y -= worldDeltaY * panSpeed;
 
+        transform.position = ClampCameraPosition(position);
+
+        lastMouseY = currentMouseY;
+    }
+
+    private Vector3 ClampCameraPosition(Vector3 position)
+    {
         float halfHeight = cam.orthographicSize;
 
-        // Clamp the camera's bottom and top edges.
         float minY = groundLimit + halfHeight;
         float maxY = ceilingLimit - halfHeight;
 
@@ -130,7 +127,6 @@ public class CameraControls : MonoBehaviour
             ? minY
             : Mathf.Clamp(position.y, minY, maxY);
 
-        transform.position = position;
-        lastMouseY = currentMouseY;
+        return position;
     }
 }

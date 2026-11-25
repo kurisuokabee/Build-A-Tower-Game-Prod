@@ -1,8 +1,11 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DebrisSpawner : MonoBehaviour
-{
+{   
+    public static DebrisSpawner Instance { get; private set; }
+
     [Header("Debris Data Types")]
     [SerializeField] private DebrisData[] debrisDatas;
 
@@ -23,17 +26,6 @@ public class DebrisSpawner : MonoBehaviour
     [SerializeField] private float initialSpawnBottomY = -3f;
     [SerializeField] private float initialSpawnTopOffset = 2f;
 
-    [Header("Size Spawn Weights")]
-    [SerializeField] private float smallChance = 70f;
-    [SerializeField] private float mediumChance = 25f;
-    [SerializeField] private float largeChance = 5f;
-
-    [Header("Size Difficulty Scaling")]
-    [SerializeField] private int levelsPerAdjustment = 5;
-    [SerializeField] private float smallDecreasePerAdjustment = 5f;
-    [SerializeField] private float mediumIncreasePerAdjustment = 3f;
-    [SerializeField] private float largeIncreasePerAdjustment = 2f;
-
     private readonly List<DebrisData> availableDebris = new();
 
     private bool isSpawningEnabled = true;
@@ -41,6 +33,13 @@ public class DebrisSpawner : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
         CacheAvailableDebris();
     }
 
@@ -250,58 +249,28 @@ public class DebrisSpawner : MonoBehaviour
 
     private DebrisData ChooseDebrisData()
     {
-        GetCurrentSizeChances(
-            out float currentSmallChance,
-            out float currentMediumChance,
-            out float currentLargeChance
-        );
+        if (availableDebris.Count == 0)
+            return null;
 
-        float totalWeight =
-            currentSmallChance +
-            currentMediumChance +
-            currentLargeChance;
+        float totalWeight = 0f;
+
+        foreach (DebrisData data in availableDebris)
+            totalWeight += Mathf.Max(0f, data.spawnWeight);
 
         if (totalWeight <= 0f)
-        {
-            return availableDebris[
-                Random.Range(0, availableDebris.Count)
-            ];
-        }
+            return availableDebris[Random.Range(0, availableDebris.Count)];
 
-        float roll = Random.value * totalWeight;
-
-        DebrisData.DebrisSize targetSize;
-
-        if (roll < currentSmallChance)
-        {
-            targetSize = DebrisData.DebrisSize.Small;
-        }
-        else if (roll < currentSmallChance + currentMediumChance)
-        {
-            targetSize = DebrisData.DebrisSize.Medium;
-        }
-        else
-        {
-            targetSize = DebrisData.DebrisSize.Large;
-        }
-
-        DebrisData selected = null;
-        int matchCount = 0;
+        float roll = Random.Range(0f, totalWeight);
 
         foreach (DebrisData data in availableDebris)
         {
-            if (data.size != targetSize)
-                continue;
+            roll -= Mathf.Max(0f, data.spawnWeight);
 
-            matchCount++;
-
-            if (Random.Range(0, matchCount) == 0)
-                selected = data;
+            if (roll <= 0f)
+                return data;
         }
 
-        return selected != null
-            ? selected
-            : availableDebris[Random.Range(0, availableDebris.Count)];
+        return availableDebris[availableDebris.Count - 1];
     }
 
     public void SetSpawningEnabled(bool enabled)
@@ -311,8 +280,7 @@ public class DebrisSpawner : MonoBehaviour
 
     public void ClearAllDebris()
     {
-        Debris[] allDebris =
-            FindObjectsByType<Debris>(FindObjectsSortMode.None);
+        Debris[] allDebris = FindObjectsByType<Debris>();
 
         foreach (var d in allDebris)
         {
@@ -328,28 +296,36 @@ public class DebrisSpawner : MonoBehaviour
         }
     }
 
-    private void GetCurrentSizeChances(
-        out float small,
-        out float medium,
-        out float large)
+    public void SpawnResourceDebrisAt(Vector3 spawnPosition, float healthMultiplier)
     {
-        int level = GetPlayerLevel();
+        DebrisData data = ChooseDebrisData();
 
-        int adjustments = level / Mathf.Max(1, levelsPerAdjustment);
+        if (data == null)
+            return;
 
-        small = Mathf.Max(
-            0f,
-            smallChance - adjustments * smallDecreasePerAdjustment
-        );
+        GameObject debrisObj = ObjectPoolManager.Instance != null
+            ? ObjectPoolManager.Instance.GetObject(
+                data.prefab,
+                spawnPosition,
+                Quaternion.identity
+            )
+            : Instantiate(data.prefab, spawnPosition, Quaternion.identity);
 
-        medium = Mathf.Max(
-            0f,
-            mediumChance + adjustments * mediumIncreasePerAdjustment
-        );
+        if (debrisObj == null)
+            return;
 
-        large = Mathf.Max(
-            0f,
-            largeChance + adjustments * largeIncreasePerAdjustment
-        );
+        DebrisSetup setup = debrisObj.GetComponent<DebrisSetup>();
+
+        if (setup != null)
+        {
+            setup.Initialize(data, healthMultiplier);
+        }
+        else
+        {
+            Debug.LogWarning(
+                $"Debris prefab '{data.prefab.name}' is missing DebrisSetup.",
+                debrisObj
+            );
+        }
     }
 }

@@ -7,10 +7,17 @@ public class FlailWeaponHitbox : MonoBehaviour
     private readonly Dictionary<AttackableHealth, HashSet<Collider2D>>
         touchingTargets = new();
 
+    private TowerSection towerSection;
+
     private float damage;
     private bool isRoulette;
     private float minimumDamageMultiplier;
     private float maximumDamageMultiplier;
+
+    private void Awake()
+    {
+        towerSection = GetComponentInParent<TowerSection>();
+    }
 
     public void Configure(
         float damage,
@@ -32,7 +39,9 @@ public class FlailWeaponHitbox : MonoBehaviour
         if (target == null || !target.IsAlive)
             return;
 
-        if (!touchingTargets.TryGetValue(target, out HashSet<Collider2D> colliders))
+        if (!touchingTargets.TryGetValue(
+            target,
+            out HashSet<Collider2D> colliders))
         {
             colliders = new HashSet<Collider2D>();
             touchingTargets.Add(target, colliders);
@@ -40,7 +49,6 @@ public class FlailWeaponHitbox : MonoBehaviour
 
         colliders.Add(other);
 
-        // Only damage once while touching the same target.
         if (colliders.Count > 1)
             return;
 
@@ -61,7 +69,12 @@ public class FlailWeaponHitbox : MonoBehaviour
             );
         }
 
-        target.TakeDamage(finalDamage);
+        // Apply Sakero's active wand effect first.
+        towerSection?.ApplyWandImpact(target);
+
+        // Apply the Flail's normal damage afterward.
+        if (target.IsAlive)
+            target.TakeDamage(finalDamage);
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -72,7 +85,9 @@ public class FlailWeaponHitbox : MonoBehaviour
         if (target == null)
             return;
 
-        if (!touchingTargets.TryGetValue(target, out HashSet<Collider2D> colliders))
+        if (!touchingTargets.TryGetValue(
+            target,
+            out HashSet<Collider2D> colliders))
             return;
 
         colliders.Remove(other);

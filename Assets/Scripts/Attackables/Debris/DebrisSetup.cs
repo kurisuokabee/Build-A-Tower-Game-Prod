@@ -6,7 +6,6 @@ using UnityEngine;
 [RequireComponent(typeof(Debris))]
 public class DebrisSetup : MonoBehaviour
 {
-    
     public void Initialize(DebrisData data, float healthMultiplier)
     {
         if (data == null)
@@ -36,11 +35,7 @@ public class DebrisSetup : MonoBehaviour
 
         if (reward != null)
         {
-            reward.Initialize(
-                data.BaseExp,
-                data.BaseBlocks,
-                data.UpgradePointChance
-            );
+            reward.Initialize(data.type, data.BaseReward);
         }
     }
 }

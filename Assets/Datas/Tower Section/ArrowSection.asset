@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ArrowSection
   m_EditorClassIdentifier: 
   sectionName: Arrow
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 954e330ea94abc8459c02340688f55be, type: 3}
   cost: 75
   requiredLevel: 1
   towerUpgradeID: 0

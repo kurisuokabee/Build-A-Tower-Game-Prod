@@ -1,31 +1,58 @@
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 
 public class MainMenuManager : MonoBehaviour
 {
-    [SerializeField] private GameObject settings;
+    [Header("Panels")]
+    [SerializeField] private GameObject mainMenuPanel;
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private GameObject sakeroSelectionPanel;
 
-    public void PlayGame()
+    private void Start()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("TowerBuilding");
+        ShowMainMenu();
+    }
+
+    public void ShowMainMenu()
+    {
+        mainMenuPanel.SetActive(true);
+        settingsPanel.SetActive(false);
+        sakeroSelectionPanel.SetActive(false);
+
+        ResetPointer();
+    }
+
+    public void ShowSettings()
+    {
+        mainMenuPanel.SetActive(false);
+        settingsPanel.SetActive(true);
+        sakeroSelectionPanel.SetActive(false);
+
+        ResetPointer();
+    }
+
+    public void ShowSakeroSelection()
+    {
+        mainMenuPanel.SetActive(false);
+        settingsPanel.SetActive(false);
+        sakeroSelectionPanel.SetActive(true);
+
+        ResetPointer();
     }
 
     public void QuitGame()
     {
         Application.Quit();
 
-        #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-        #endif
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 
-    
-    public void ToggleSettings()
+    private void ResetPointer()
     {
-        settings.SetActive(!settings.activeSelf);
         StartCoroutine(ResetPointerState());
     }
 
@@ -36,6 +63,4 @@ public class MainMenuManager : MonoBehaviour
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
     }
-
-    
 }

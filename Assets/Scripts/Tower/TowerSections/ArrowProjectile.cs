@@ -22,6 +22,7 @@ public class ArrowProjectile : MonoBehaviour
     private Rigidbody2D rb;
     private AttackableHealth target;
     private Transform returnPoint;
+    private TowerSection towerSection;
     private PooledObject pooledObject;
 
     private float damage;
@@ -51,7 +52,8 @@ public class ArrowProjectile : MonoBehaviour
         bool returning,
         Transform returnPoint,
         Vector2 direction,
-        bool homing)
+        bool homing,
+        TowerSection towerSection)
     {
         if (direction.sqrMagnitude <= 0f)
         {
@@ -74,6 +76,7 @@ public class ArrowProjectile : MonoBehaviour
         returningEnabled = returning;
         this.returnPoint = returnPoint;
         homingEnabled = homing;
+        this.towerSection = towerSection;
 
         lifetime = 0f;
         outboundTimer = 0f;
@@ -133,7 +136,6 @@ public class ArrowProjectile : MonoBehaviour
 
         if (homingEnabled)
         {
-            // Keep the original target. Never switch to another entity.
             if (!IsTargetValid(target))
             {
                 ReturnToPool();
@@ -245,7 +247,6 @@ public class ArrowProjectile : MonoBehaviour
         AttackableHealth attackable =
             hit.GetComponentInParent<AttackableHealth>();
 
-        // Homing arrows ignore every entity except their assigned target.
         if (homingEnabled && attackable != target)
             return;
 
@@ -254,7 +255,11 @@ public class ArrowProjectile : MonoBehaviour
             if (IsTargetValid(attackable) &&
                 hitTargets.Add(attackable))
             {
+                // Apply normal arrow damage first.
                 attackable.TakeDamage(GetActualDamage());
+
+                // Then apply the active wand's impact effect.
+                towerSection?.ApplyWandImpact(attackable);
             }
 
             if (!piercing)
@@ -263,7 +268,6 @@ public class ArrowProjectile : MonoBehaviour
             return;
         }
 
-        // Homing arrows ignore debris as well.
         if (homingEnabled)
             return;
 
@@ -283,6 +287,7 @@ public class ArrowProjectile : MonoBehaviour
         initialized = false;
         target = null;
         returnPoint = null;
+        towerSection = null;
 
         rb.linearVelocity = Vector2.zero;
         rb.angularVelocity = 0f;

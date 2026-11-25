@@ -1,3 +1,4 @@
+
 using System;
 using TMPro;
 using UnityEngine;
@@ -173,14 +174,15 @@ public class AbyssManager : MonoBehaviour
 
     private void InitializeCurrentLevel()
     {
+        // Start the enemy horde when the game begins.
         if (enemySpawner != null)
-            enemySpawner.SetHordeActive(false);
+            enemySpawner.SetHordeActive(true);
 
         if (debrisSpawner != null)
             debrisSpawner.SetSpawningEnabled(true);
 
-        if (currentAbyssLevel == 4)
-            StartLevel4Horde();
+        // Only activate the Level 4 win condition when starting at Level 4.
+        IsLevel4HordeActive = currentAbyssLevel == 4;
     }
 
     public void StartBossEvent()
@@ -309,7 +311,16 @@ public class AbyssManager : MonoBehaviour
 
             if (currentAbyssLevel == 4)
             {
-                StartLevel4Horde();
+                // Activate the Level 4 horde win condition.
+                IsLevel4HordeActive = true;
+
+                if (debrisSpawner != null)
+                    debrisSpawner.SetSpawningEnabled(true);
+
+                if (enemySpawner != null)
+                    enemySpawner.SetHordeActive(true);
+
+                Debug.Log("Abyss Level 4 Endless Horde started!");
             }
             else
             {
@@ -337,19 +348,6 @@ public class AbyssManager : MonoBehaviour
 
         debrisSpawner.RespawnInitialDebris();
         debrisSpawner.SetSpawningEnabled(true);
-    }
-
-    private void StartLevel4Horde()
-    {
-        IsLevel4HordeActive = true;
-
-        if (debrisSpawner != null)
-            debrisSpawner.SetSpawningEnabled(true);
-
-        if (enemySpawner != null)
-            enemySpawner.SetHordeActive(true);
-
-        Debug.Log("Abyss Level 4 Endless Horde started!");
     }
 
     private BossData GetCurrentBossData()

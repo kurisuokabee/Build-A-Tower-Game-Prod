@@ -76,7 +76,7 @@ public class Abyss3AttackController : MonoBehaviour
         EnemySetup setup = enemyObj.GetComponent<EnemySetup>();
 
         if (setup != null)
-            setup.Initialize(data.attackType, target, data.sprite);
+            setup.Initialize(data, target);
     }
 
     private TowerSection FindTarget(Vector3 enemyPosition)

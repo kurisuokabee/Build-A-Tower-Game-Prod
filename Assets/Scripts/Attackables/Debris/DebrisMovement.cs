@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class DebrisMovement : MonoBehaviour
@@ -13,6 +14,7 @@ public class DebrisMovement : MonoBehaviour
 
     private PooledObject pooledObject;
     private AttackableHealth attackableHealth;
+    private AttackableSlow attackableSlow;
 
     private float rotationSpeed;
 
@@ -20,6 +22,7 @@ public class DebrisMovement : MonoBehaviour
     {
         pooledObject = GetComponent<PooledObject>();
         attackableHealth = GetComponent<AttackableHealth>();
+        attackableSlow = GetComponent<AttackableSlow>();
     }
 
     public void Initialize(float speed)
@@ -47,15 +50,19 @@ public class DebrisMovement : MonoBehaviour
         if (attackableHealth != null && attackableHealth.IsStunned)
             return;
 
+        float speedMultiplier = attackableSlow != null
+            ? attackableSlow.CurrentSpeedMultiplier
+            : 1f;
+
         transform.position +=
-            fallSpeed * Time.deltaTime * Vector3.down;
+            fallSpeed * speedMultiplier * Time.deltaTime * Vector3.down;
 
         transform.Rotate(
             Vector3.forward,
             rotationSpeed * Time.deltaTime
         );
 
-        if (transform.position.y < -9f)
+        if (transform.position.y < -9f) 
         {
             if (pooledObject != null)
                 pooledObject.ReturnToPool();

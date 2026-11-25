@@ -15,8 +15,8 @@ GameObject:
   - component: {fileID: 3812733361960072294}
   - component: {fileID: 6397563595065374891}
   - component: {fileID: 6890788113105140433}
-  - component: {fileID: 3853366995021007929}
-  m_Layer: 0
+  - component: {fileID: 2740481485338405867}
+  m_Layer: 3
   m_Name: Abyss 3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40,6 +40,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4781220534988497775
 SpriteRenderer:
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -58,6 +59,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -79,10 +82,12 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_SortingOrder: 70
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 21300000, guid: 85f30468d5cdb474daa06b196b3749ab, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -91,8 +96,8 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+  m_BlendShapeWeights: []
 --- !u!114 &3865217126728862869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -107,7 +112,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minionEnemies:
   - {fileID: 11400000, guid: d0b5b8c15c3f0e545ae732a12ee54fe1, type: 2}
-  - {fileID: 11400000, guid: b2ddaf20863821844a1f51e635ccc9fe, type: 2}
+  - {fileID: 11400000, guid: 1710953894fc72745bc07182e68b50c4, type: 2}
   minSpawnInterval: 2
   maxSpawnInterval: 4
   tower: {fileID: 0}
@@ -139,11 +144,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: {fileID: 0}
+  attackableReward: {fileID: 0}
   startingMinionKills: 15
-  additionalKillsPerCycle: 5
-  startingVulnerabilityDuration: 15
+  additionalKillsPerCycle: 2
+  startingVulnerabilityDuration: 18
   cooldownReductionPerCycle: 3
-  minimumVulnerabilityDuration: 5
+  minimumVulnerabilityDuration: 8
 --- !u!114 &6397563595065374891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,6 +166,8 @@ MonoBehaviour:
   radius: 5
   rotationSpeed: 30
   heightOffset: 10
+  shakeAmount: 0.05
+  shakeSpeed: 30
 --- !u!114 &6890788113105140433
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -173,8 +181,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: {fileID: 0}
---- !u!61 &3853366995021007929
-BoxCollider2D:
+  attackableReward: {fileID: 0}
+--- !u!58 &2740481485338405867
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -208,14 +217,4 @@ BoxCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 1}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Radius: 1

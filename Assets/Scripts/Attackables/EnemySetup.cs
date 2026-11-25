@@ -7,11 +7,9 @@ public class EnemySetup : MonoBehaviour
     [SerializeField] private EnemyAttack enemyAttack;
     [SerializeField] private EnemyMovement enemyMovement;
     [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private AttackableReward attackableReward;
 
-    public void Initialize(
-        EnemyAttack.AttackType attackType,
-        TowerSection target,
-        Sprite sprite)
+    private void Awake()
     {
         if (enemyAttack == null)
             enemyAttack = GetComponent<EnemyAttack>();
@@ -22,20 +20,35 @@ public class EnemySetup : MonoBehaviour
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
 
-        float attackRange = attackType == EnemyAttack.AttackType.Melee
+        if (attackableReward == null)
+            attackableReward = GetComponent<AttackableReward>();
+    }
+
+    public void Initialize(EnemyData data, TowerSection target)
+    {
+        if (data == null)
+            return;
+
+        float attackRange = data.attackType == EnemyAttack.AttackType.Melee
             ? Random.Range(1.2f, 1.6f)
             : Random.Range(4.5f, 7f);
 
         if (enemyAttack != null)
-            enemyAttack.Initialize(attackType, target);
+            enemyAttack.Initialize(data.attackType, target);
 
         if (enemyMovement != null)
             enemyMovement.Initialize(target, attackRange);
 
         if (spriteRenderer != null)
+            spriteRenderer.sprite = data.sprite;
+
+        if (attackableReward != null)
         {
-            spriteRenderer.sprite = sprite;
-            spriteRenderer.color = Color.red;
+            attackableReward.Initialize(
+                data.expReward,
+                data.blocksReward,
+                data.upgradePointsReward
+            );
         }
     }
 }

@@ -31,6 +31,21 @@ public class CannonFiringController : MonoBehaviour
     [SerializeField, Range(0f, 1f)]
     private float shardDamageMultiplier = 0.5f;
 
+    private TowerSection towerSection;
+
+    private void Awake()
+    {
+        towerSection = GetComponent<TowerSection>();
+
+        if (towerSection == null)
+        {
+            Debug.LogError(
+                "CannonFiringController requires a TowerSection.",
+                this
+            );
+        }
+    }
+
     public void Fire(
         AttackableHealth target,
         float damage,
@@ -132,7 +147,8 @@ public class CannonFiringController : MonoBehaviour
             clusterExplosionMultiplier,
             clusterSpread,
             shardDamageMultiplier,
-            bombardment
+            bombardment,
+            towerSection
         );
     }
 }

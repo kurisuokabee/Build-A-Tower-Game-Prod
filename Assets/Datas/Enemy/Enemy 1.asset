@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Enemy 1
   m_EditorClassIdentifier: 
   prefab: {fileID: 7049896600385680556, guid: aff36191139626f44aae222e526f347e, type: 3}
-  sprite: {fileID: 21300000, guid: c9baf5b1540063e4388189bd297497e9, type: 3}
-  attackType: 0
+  sprite: {fileID: 21300000, guid: 3b1eed41d280a72489e265f885077ce9, type: 3}
+  attackType: 1

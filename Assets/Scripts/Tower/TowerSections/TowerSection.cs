@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
 
 public abstract class TowerSection : MonoBehaviour
 {
@@ -11,6 +12,11 @@ public abstract class TowerSection : MonoBehaviour
     [Header("Section Data")]
     [SerializeField] private TowerSectionData sectionData;
 
+    [Header("Place Effect")]
+    [SerializeField] private float placeEffectDuration = 0.25f;
+    [SerializeField] private float placeEffectOvershoot = 1.3f;
+
+    [SerializeField] SpriteRenderer spriteRenderer;
     public TowerSectionData Data => sectionData;
 
     public float AttackRange { get; protected set; }
@@ -51,11 +57,7 @@ public abstract class TowerSection : MonoBehaviour
         Damage = sectionData.damage;
     }
 
-    protected virtual void Start()
-    {
-        ApplyGlobalUpgrades();
-    }
-
+    
     protected virtual void Update()
     {
         if (EffectiveAttacksPerSecond <= 0f)
@@ -78,6 +80,65 @@ public abstract class TowerSection : MonoBehaviour
         attackTimer = 1f / EffectiveAttacksPerSecond;
     }
 
+    public void ApplyWandImpact(AttackableHealth target)
+    {
+        if (TowerImpactEffect.Instance == null)
+            return;
+
+        TowerImpactEffect.Instance.HandleImpact(this, target);
+    }
+
+    
+    public void PlayPlaceEffect()
+    {
+        StopCoroutine(nameof(PlaceEffect));
+        StartCoroutine(PlaceEffect());
+    }
+
+    private IEnumerator PlaceEffect()
+    {   
+        spriteRenderer.sprite = sectionData.icon;
+
+        Vector3 originalScale = transform.localScale;
+
+        transform.localScale = Vector3.zero;
+
+        float timer = 0f;
+        float halfDuration = placeEffectDuration * 0.5f;
+
+        // Scale from 0 to 1.2
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t = Mathf.Clamp01(timer / halfDuration);
+            t = Mathf.SmoothStep(0f, 1f, t);
+
+            transform.localScale =
+                originalScale * Mathf.Lerp(1f, placeEffectOvershoot, t);
+
+            yield return null;
+        }
+
+        timer = 0f;
+
+        // Scale from 1.2 back to 1
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+
+            float t = Mathf.Clamp01(timer / halfDuration);
+            t = Mathf.SmoothStep(0f, 1f, t);
+
+            transform.localScale =
+                originalScale * Mathf.Lerp(placeEffectOvershoot, 1f, t);
+
+            yield return null;
+        }
+
+        transform.localScale = originalScale;
+    }
+    
     public bool TriggerAttackImmediately()
     {
         if (!isActiveAndEnabled)
@@ -131,14 +192,7 @@ public abstract class TowerSection : MonoBehaviour
         }
     }
 
-    public void ApplyGlobalUpgrades()
-    {
-        if (TowerSectionUpgrade.Instance == null || sectionData == null)
-            return;
-
-        ApplyUpgrade();
-    }
-
+    
     // Permanent upgrade.
     public void ApplyUpgrade()
     {

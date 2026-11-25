@@ -12,9 +12,11 @@ public class CannonProjectile : MonoBehaviour
     [Header("Trebuchet Shards")]
     [SerializeField] private float shardSpeed = 7f;
     [SerializeField] private float shardLifetime = 1.5f;
-
+    [SerializeField] private GameObject explosionPrefab;
     private Rigidbody2D rb;
     private float originalGravityScale;
+
+    private TowerSection towerSection;
 
     private float damage;
     private float areaOfEffect;
@@ -66,7 +68,8 @@ public class CannonProjectile : MonoBehaviour
         float clusterExplosionMultiplier,
         float clusterSpread,
         float shardDamageMultiplier,
-        bool bombardment)
+        bool bombardment,
+        TowerSection towerSection)
     {
         ResetProjectile();
 
@@ -87,6 +90,8 @@ public class CannonProjectile : MonoBehaviour
         isTrebuchet = trebuchet;
         isTrebuchetII = trebuchetII;
         isBombardment = bombardment;
+
+        this.towerSection = towerSection;
 
         assignedTarget = target;
 
@@ -163,6 +168,7 @@ public class CannonProjectile : MonoBehaviour
         autoExplodeAtDestination = false;
 
         projectilePrefab = null;
+        towerSection = null;
 
         assignedTarget = null;
         ignoredTarget = null;
@@ -246,7 +252,16 @@ public class CannonProjectile : MonoBehaviour
             areaOfEffect,
             damage
         );
+        GameObject explosion = ObjectPoolManager.Instance.GetObject(
+            explosionPrefab,
+            transform.position,
+            Quaternion.identity
+        );
 
+        if (explosion != null)
+        {
+            explosion.GetComponent<ExplosionEffect>().Play(areaOfEffect);
+        }
         ReturnToPool();
     }
 
@@ -275,8 +290,21 @@ public class CannonProjectile : MonoBehaviour
                 (Vector2)target.transform.position - center;
 
             if (offset.sqrMagnitude <= radiusSquared)
-                target.TakeDamage(damageAmount);
+            {
+                ApplyWandImpact(target);
+
+                if (target.IsAlive)
+                    target.TakeDamage(damageAmount);
+            }
         }
+    }
+
+    private void ApplyWandImpact(AttackableHealth target)
+    {
+        if (target == null || !target.IsAlive)
+            return;
+
+        towerSection?.ApplyWandImpact(target);
     }
 
     private void SplitCluster()
@@ -325,7 +353,8 @@ public class CannonProjectile : MonoBehaviour
             projectilePrefab,
             damage * clusterDamageMultiplier,
             areaOfEffect * clusterExplosionMultiplier,
-            isMissile
+            isMissile,
+            towerSection
         );
     }
 
@@ -334,13 +363,15 @@ public class CannonProjectile : MonoBehaviour
         GameObject prefab,
         float childDamage,
         float childAOE,
-        bool straight)
+        bool straight,
+        TowerSection towerSection)
     {
         ResetProjectile();
 
         projectilePrefab = prefab;
         damage = childDamage;
         areaOfEffect = childAOE;
+        this.towerSection = towerSection;
 
         autoExplodeAtDestination = true;
 
@@ -360,13 +391,20 @@ public class CannonProjectile : MonoBehaviour
 
         if (target != null && target.IsAlive)
         {
-            target.TakeDamage(damage);
-            target.ApplyStun(stunDuration);
+            ApplyWandImpact(target);
 
-            Debug.Log(
-                $"[Trebuchet] Hit {target.name}. Stunned for {stunDuration}s.",
-                this
-            );
+            if (target.IsAlive)
+            {
+                target.TakeDamage(damage);
+
+                if (target.IsAlive)
+                    target.ApplyStun(stunDuration);
+
+                Debug.Log(
+                    $"[Trebuchet] Hit {target.name}. Stunned for {stunDuration}s.",
+                    this
+                );
+            }
         }
 
         if (isTrebuchetII)
@@ -406,7 +444,8 @@ public class CannonProjectile : MonoBehaviour
                 projectilePrefab,
                 damage * shardDamageMultiplier,
                 stunDuration,
-                originalTarget
+                originalTarget,
+                towerSection
             );
         }
 
@@ -418,7 +457,8 @@ public class CannonProjectile : MonoBehaviour
         GameObject prefab,
         float shardDamage,
         float stun,
-        AttackableHealth originalTarget)
+        AttackableHealth originalTarget,
+        TowerSection towerSection)
     {
         ResetProjectile();
 
@@ -426,6 +466,7 @@ public class CannonProjectile : MonoBehaviour
         damage = shardDamage;
         stunDuration = stun;
         ignoredTarget = originalTarget;
+        this.towerSection = towerSection;
 
         isShard = true;
 
@@ -451,8 +492,15 @@ public class CannonProjectile : MonoBehaviour
 
         if (target != null && target.IsAlive)
         {
-            target.TakeDamage(damage);
-            target.ApplyStun(stunDuration);
+            ApplyWandImpact(target);
+
+            if (target.IsAlive)
+            {
+                target.TakeDamage(damage);
+
+                if (target.IsAlive)
+                    target.ApplyStun(stunDuration);
+            }
         }
 
         ReturnToPool();

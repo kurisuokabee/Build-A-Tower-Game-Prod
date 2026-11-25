@@ -26,6 +26,13 @@ public class ArrowFiringController : MonoBehaviour
     [SerializeField, Range(0f, 1f)]
     private float barrageDamageMultiplier = 0.5f;
 
+    private TowerSection towerSection;
+
+    private void Awake()
+    {
+        towerSection = GetComponent<TowerSection>();
+    }
+
     public void Fire(
         AttackableHealth target,
         bool piercing,
@@ -34,26 +41,15 @@ public class ArrowFiringController : MonoBehaviour
         bool barrage,
         float damage)
     {
-        if (firePoint == null || arrowPrefab == null ||
-            target == null || !target.IsAlive)
-        {
-            return;
-        }
-
-        if (ObjectPoolManager.Instance == null)
-        {
-            Debug.LogError("ObjectPoolManager is missing from the scene.");
-            return;
-        }
-
-        int arrowCount = projectileCount;
-
-        if (barrage || piercing || homing ||
-            true)
-        {
-            // Extra arrows are granted by the right upgrade branch.
-            // The caller determines this through the extraArrows flag below.
-        }
+        Fire(
+            target,
+            piercing,
+            returning,
+            homing,
+            barrage,
+            false,
+            damage
+        );
     }
 
     public void Fire(
@@ -65,8 +61,11 @@ public class ArrowFiringController : MonoBehaviour
         bool extraArrows,
         float damage)
     {
-        if (firePoint == null || arrowPrefab == null ||
-            target == null || !target.IsAlive)
+        if (firePoint == null ||
+            arrowPrefab == null ||
+            target == null ||
+            !target.IsAlive ||
+            towerSection == null)
         {
             return;
         }
@@ -180,7 +179,9 @@ public class ArrowFiringController : MonoBehaviour
         }
     }
 
-    private Vector2 RotateDirection(Vector2 direction, float angle)
+    private Vector2 RotateDirection(
+        Vector2 direction,
+        float angle)
     {
         float radians = angle * Mathf.Deg2Rad;
 
@@ -228,7 +229,8 @@ public class ArrowFiringController : MonoBehaviour
             returning,
             firePoint,
             direction,
-            homing
+            homing,
+            towerSection
         );
     }
 
@@ -237,8 +239,11 @@ public class ArrowFiringController : MonoBehaviour
         bool extraArrows,
         float damage)
     {
-        if (firePoint == null || arrowPrefab == null ||
-            targets == null || targets.Count == 0)
+        if (firePoint == null ||
+            arrowPrefab == null ||
+            targets == null ||
+            targets.Count == 0 ||
+            towerSection == null)
         {
             return;
         }
@@ -248,7 +253,10 @@ public class ArrowFiringController : MonoBehaviour
         if (extraArrows)
             arrowCount += extraArrowsPerUpgrade;
 
-        int arrowsToFire = Mathf.Min(arrowCount, targets.Count);
+        int arrowsToFire = Mathf.Min(
+            arrowCount,
+            targets.Count
+        );
 
         float damagePerArrow = damage;
 
@@ -262,7 +270,6 @@ public class ArrowFiringController : MonoBehaviour
             if (target == null || !target.IsAlive)
                 continue;
 
-            // Give each arrow a random launch direction.
             float randomAngle = Random.Range(0f, 360f);
 
             Vector2 randomDirection = new Vector2(

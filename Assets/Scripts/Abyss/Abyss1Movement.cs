@@ -25,7 +25,8 @@ public class Abyss1BossMovement : MonoBehaviour
     [SerializeField, Min(0.1f)] private float triangleRadius = 7f;
     [SerializeField, Min(0.1f)] private float squareRadius = 8f;
     [SerializeField, Min(0.1f)] private float circleRadius = 9f;
-
+    [Header("Rotation Settings")]
+    [SerializeField] private float rotationSpeed = 360f;
     [SerializeField, Range(8, 100)] private int circleSegments = 36;
 
     private Transform center;
@@ -66,6 +67,8 @@ public class Abyss1BossMovement : MonoBehaviour
     {
         Vector3 target = waypoints[waypointIndex];
 
+        RotateTowardsTarget(target);
+
         transform.position = Vector3.MoveTowards(
             transform.position,
             target,
@@ -86,7 +89,23 @@ public class Abyss1BossMovement : MonoBehaviour
         currentStage = MovementStage.BackAndForth;
         BuildBackAndForthPath();
     }
+    private void RotateTowardsTarget(Vector3 target)
+    {
+        Vector2 direction = target - transform.position;
 
+        if (direction.sqrMagnitude <= 0.001f)
+            return;
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+        Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
+
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime
+        );
+    }
     private void AdvanceStage()
     {
         switch (currentStage)

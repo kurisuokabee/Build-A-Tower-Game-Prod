@@ -48,11 +48,18 @@ public class TowerSectionUpgradeTree : MonoBehaviour
     public UpgradeChoice SelectedBranch => selectedBranch;
     public UpgradeChoice SelectedSpecialization => selectedSpecialization;
 
+    [Header("Upgrade Indicator")]
+    [SerializeField] private TowerSectionUpgradeIndicator upgradeIndicator;
+
+    private int lastUpgradePoints = -1;
+
     private void OnEnable()
     {
+        lastUpgradePoints = -1;
+        RefreshUpgradeIndicator();
+
         TowerBuilding.Instance?.RefreshTemporaryUpgrades();
     }
-
     public string GetUpgradeName(UpgradeChoice choice)
     {
         UpgradeInfo info = upgrades.Find(x => x.choice == choice);
@@ -86,7 +93,39 @@ public class TowerSectionUpgradeTree : MonoBehaviour
 
         return economy.UpgradePoints >= GetUpgradeCost(choice);
     }
+    private void Update()
+    {
+        int currentPoints = PlayerEconomy.Instance != null
+            ? PlayerEconomy.Instance.UpgradePoints
+            : 0;
 
+        if (currentPoints == lastUpgradePoints)
+            return;
+
+        lastUpgradePoints = currentPoints;
+        RefreshUpgradeIndicator();
+    }
+
+    private void RefreshUpgradeIndicator()
+    {
+        if (upgradeIndicator == null)
+            return;
+
+        List<UpgradeChoice> choices = GetAvailableChoices();
+
+        bool hasAffordableUpgrade = false;
+
+        foreach (UpgradeChoice choice in choices)
+        {
+            if (CanAffordUpgrade(choice))
+            {
+                hasAffordableUpgrade = true;
+                break;
+            }
+        }
+
+        upgradeIndicator.SetUpgradeAvailable(hasAffordableUpgrade);
+    }
     public List<UpgradeChoice> GetAvailableChoices()
     {
         List<UpgradeChoice> choices = new();
@@ -167,3 +206,4 @@ public class TowerSectionUpgradeTree : MonoBehaviour
         return true;
     }
 }
+

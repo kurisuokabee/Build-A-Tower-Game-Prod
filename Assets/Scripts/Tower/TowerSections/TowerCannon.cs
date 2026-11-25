@@ -221,7 +221,7 @@ public class TowerCannon : TowerSection
 
     protected override void ApplyUpgradeStats()
     {
-        Damage += 1f;
-        AttacksPerSecond += 0.1f;
+        Damage += 0.25f;
+        AttacksPerSecond += 0.15f;
     }
 }

@@ -1,4 +1,5 @@
 
+using System.Collections;
 using UnityEngine;
 
 public class Abyss1AttackController : MonoBehaviour
@@ -11,7 +12,15 @@ public class Abyss1AttackController : MonoBehaviour
     [SerializeField] private Transform projectileSpawnPoint;
     [SerializeField] private Abyss1Boss bossController;
 
+    [Header("Attack Animation")]
+    [SerializeField] private float squashAmount = 0.75f;
+    [SerializeField] private float stretchAmount = 1.2f;
+    [SerializeField] private float animationDuration = 0.1f;
+    [SerializeField] private float recoveryDuration = 0.15f;
+
     private GameObject activeProjectile;
+    private Vector3 originalScale;
+    private Coroutine attackAnimation;
 
     public bool HasActiveProjectile => activeProjectile != null;
 
@@ -19,14 +28,23 @@ public class Abyss1AttackController : MonoBehaviour
     {
         if (bossController == null)
             bossController = GetComponent<Abyss1Boss>();
+
+        originalScale = transform.localScale;
     }
 
     private void OnDisable()
     {
         ReturnActiveProjectile();
+
+        if (attackAnimation != null)
+        {
+            StopCoroutine(attackAnimation);
+            attackAnimation = null;
+        }
+
+        transform.localScale = originalScale;
     }
 
-    
     public bool LaunchProjectile()
     {
         if (HasActiveProjectile)
@@ -69,9 +87,55 @@ public class Abyss1AttackController : MonoBehaviour
             this
         );
 
+        if (attackAnimation != null)
+            StopCoroutine(attackAnimation);
+
+        attackAnimation = StartCoroutine(PlayAttackAnimation());
+
         return true;
     }
 
+    private IEnumerator PlayAttackAnimation()
+    {
+        Vector3 squashedScale = new Vector3(
+            originalScale.x * squashAmount,
+            originalScale.y * stretchAmount,
+            originalScale.z
+        );
+
+        float timer = 0f;
+
+        while (timer < animationDuration)
+        {
+            timer += Time.deltaTime;
+
+            transform.localScale = Vector3.Lerp(
+                originalScale,
+                squashedScale,
+                timer / animationDuration
+            );
+
+            yield return null;
+        }
+
+        timer = 0f;
+
+        while (timer < recoveryDuration)
+        {
+            timer += Time.deltaTime;
+
+            transform.localScale = Vector3.Lerp(
+                squashedScale,
+                originalScale,
+                timer / recoveryDuration
+            );
+
+            yield return null;
+        }
+
+        transform.localScale = originalScale;
+        attackAnimation = null;
+    }
 
     public void OnProjectileFinished(BossProjectile projectile)
     {
