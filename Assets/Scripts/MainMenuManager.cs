@@ -2,11 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-<<<<<<< Updated upstream
-=======
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
->>>>>>> Stashed changes
 
 public class MainMenuManager : MonoBehaviour
 {
@@ -15,48 +11,47 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject sakeroSelectionPanel;
 
-<<<<<<< Updated upstream
-=======
-    
-    [Header("Continue (Save System)")]
-    [Tooltip("The Continue button in the scene. Shown only when a save file exists.")]
-    [SerializeField] private Button continueButton;
-
-    private const string GameScene = "TowerBuilding";
-
->>>>>>> Stashed changes
     private void Start()
     {
         ShowMainMenu();
     }
 
-    [Header("Continue (Save System)")]
-    [Tooltip("The Continue button in the scene. Shown only when a save file exists.")]
-    [SerializeField] private Button continueButton;
+    // [Header("Continue (Save System)")]
+    // [Tooltip("The Continue button in the scene. Shown only when a save file exists.")]
+    // [SerializeField] private Button continueButton;
 
-    private const string GameScene = "TowerBuilding";
-
+   
     private void Awake()
     {
-        SaveSystem.ClearLoaded();
-        SetupContinueButton();
+        //SaveSystem.ClearLoaded();
+        //SetupContinueButton();
     }
 
     public void ShowMainMenu()
+    {
+        mainMenuPanel.SetActive(true);
+        settingsPanel.SetActive(false);
+        sakeroSelectionPanel.SetActive(false);
+
+        ResetPointer();
+    }
+
+    public void ShowSettings()
+    {
+        mainMenuPanel.SetActive(false);
+        settingsPanel.SetActive(true);
+        sakeroSelectionPanel.SetActive(false);
+
+        ResetPointer();
+    }
+
+    public void ShowSakeroSelection()
     {
         mainMenuPanel.SetActive(false);
         settingsPanel.SetActive(false);
         sakeroSelectionPanel.SetActive(true);
 
         ResetPointer();
-<<<<<<< Updated upstream
-=======
-    }
-    private void Awake()
-    {
-        SaveSystem.ClearLoaded();
-        //SetupContinueButton();
->>>>>>> Stashed changes
     }
 
     public void QuitGame()
@@ -69,7 +64,7 @@ public class MainMenuManager : MonoBehaviour
     }
 
     
-    public void ToggleSettings()
+    private void ResetPointer()
     {
         StartCoroutine(ResetPointerState());
     }
